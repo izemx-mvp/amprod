@@ -12,7 +12,7 @@ export const INITIAL_TRAINING_COURSES: TrainingCourse[] = [
     totalEnrolled: 48,
     completionRate: 98,
     rating: 4.95,
-    image: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1658387575638-026450e4df6e?w=800&auto=format&fit=crop&q=80',
     instructor: 'Dr. Leila Zerouali (Docteur en Pharmacie & Formulation)',
     description: 'Immersion intensive de 35 heures en laboratoire certifié. Maîtrisez le calcul HLB, les systèmes de conservation naturels, la stabilité thermique et la rhéologie des émulsions haut de gamme.',
     syllabus: [
@@ -56,7 +56,7 @@ export const INITIAL_TRAINING_COURSES: TrainingCourse[] = [
     totalEnrolled: 64,
     completionRate: 100,
     rating: 4.88,
-    image: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1554224155-1696413565d3?w=800&auto=format&fit=crop&q=80',
     instructor: 'Me. Taha Kettani (Consultant Réglementaire CPNP & DMP Maroc)',
     description: 'Constituez votre Dossier d\'Information Produit (DIP), validez vos allégations marketing, étiquetages et respectez les Bonnes Pratiques de Fabrication cosmétique.',
     syllabus: [
@@ -88,7 +88,7 @@ export const INITIAL_TRAINING_COURSES: TrainingCourse[] = [
     totalEnrolled: 92,
     completionRate: 97,
     rating: 4.96,
-    image: 'https://images.unsplash.com/photo-1607006314180-a22675681e84?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1600857544200-b2f666a9a2ec?w=800&auto=format&fit=crop&q=80',
     instructor: 'Mme. Asmaa Lahlou (Maître Artisan Savonnier & Formatrice Bio)',
     description: 'Apprenez à concevoir des savons saponifiés à froid surgras, des shampoings solides et des déodorants en stick sans eau ni conservateur synthétique.',
     syllabus: [
@@ -120,7 +120,7 @@ export const INITIAL_TRAINING_COURSES: TrainingCourse[] = [
     totalEnrolled: 36,
     completionRate: 95,
     rating: 4.82,
-    image: 'https://images.unsplash.com/photo-1608248597359-009c958469d4?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1777396761485-85b2ac69b89a?w=800&auto=format&fit=crop&q=80',
     instructor: 'Dr. Othmane Slaoui (Ingénieur Agronome & Distillateur)',
     description: 'Maîtrisez la distillation à la vapeur d\'eau, l\'hydrodistillation, les macérations solaires et le contrôle organoleptique des huiles de première pression.',
     syllabus: [
@@ -153,7 +153,7 @@ export const INITIAL_TRAINING_COURSES: TrainingCourse[] = [
     totalEnrolled: 74,
     completionRate: 100,
     rating: 4.79,
-    image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1633793566189-8e9fe6f817fc?w=800&auto=format&fit=crop&q=80',
     instructor: 'M. Kamil Berrada (Directeur Marketing & Brand Strategist)',
     description: 'Positionnement de marque haut de gamme, sourcing des packagings recyclables, calcul du coût de revient et stratégie de mise sur le marché B2B / pharmacie.',
     syllabus: [
@@ -184,7 +184,7 @@ export const INITIAL_TRAINING_COURSES: TrainingCourse[] = [
     totalEnrolled: 28,
     completionRate: 100,
     rating: 4.91,
-    image: 'https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1575468130797-aa950b68aeec?w=800&auto=format&fit=crop&q=80',
     instructor: 'Dr. Myriam Chraibi (Microbiologiste Industrielle)',
     description: 'Protocoles de challenge-tests (ISO 11930), dénombrement microbien, validation de la PAO (Période Après Ouverture) et tests de compatibilité contenant-contenu.',
     syllabus: [
@@ -216,7 +216,7 @@ export const INITIAL_TRAINING_COURSES: TrainingCourse[] = [
     totalEnrolled: 22,
     completionRate: 96,
     rating: 4.98,
-    image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1781344116880-029945a42b75?w=800&auto=format&fit=crop&q=80',
     instructor: 'Dr. Leila Zerouali & Invité R&D International',
     description: 'Formulation de haute technicité : encapsulation liposomale, peptides signal et vecteurs d\'actifs pénétrants pour cabinets médicaux et spas haut standing.',
     syllabus: [

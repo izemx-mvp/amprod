@@ -85,7 +85,13 @@ export const Lead360Modal: React.FC<Lead360ModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-950/80 backdrop-blur-md animate-fade-in">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-950/80 backdrop-blur-md animate-fade-in"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Fiche 360° du contact"
+    >
       <div 
         className="relative my-auto w-full max-w-5xl bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden"
         onClick={(e) => e.stopPropagation()}
@@ -125,6 +131,8 @@ export const Lead360Modal: React.FC<Lead360ModalProps> = ({
 
           <button
             onClick={onClose}
+            aria-label="Fermer"
+            title="Fermer (Échap)"
             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />

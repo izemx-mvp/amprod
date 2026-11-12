@@ -43,6 +43,8 @@ import { INITIAL_TRAINING_COURSES, INITIAL_TRAINING_REVIEWS, INITIAL_EMAIL_TEMPL
 import { INITIAL_QUOTES, INITIAL_ORDERS, INITIAL_LOGISTICS, INITIAL_INVOICES, INITIAL_CLAIMS, INITIAL_SUPPLIERS, INITIAL_PURCHASE_ORDERS } from '../data/operations';
 import { INITIAL_CHATBOT_CONFIGS, INITIAL_CONVERSATIONS } from '../data/customerService';
 import { INITIAL_KNOWLEDGE_DOCS, INITIAL_FAQS } from '../data/seoAndSettings';
+import { brandFallbackImage, refreshLegacyImages } from '../data/images';
+import { EXTRA_LEADS, EXTRA_SUPPLIERS } from '../data/mockExtras';
 
 import { BrandLogo } from '../components/BrandLogo';
 import { ErpDashboard } from '../components/ErpDashboard';
@@ -56,8 +58,42 @@ import { FormationsErpModule } from '../components/FormationsErpModule';
 import { FooterInstitutional } from '../components/FooterAndDisclaimers';
 import { AnimatedBackground } from '../components/AnimatedBackground';
 
+// Libellés [section, écran] de chaque menu, utilisés pour le fil d'Ariane et la recherche globale
+const STANDARD_MENU: Record<string, [string, string]> = {
+  dashboard: ['Pilotage', 'Dashboard'],
+  alertes: ['Pilotage', 'Alertes'],
+  leads: ['Commercial & Ventes', 'Leads / CRM'],
+  clients: ['Commercial & Ventes', 'Clients'],
+  devis: ['Commercial & Ventes', 'Devis'],
+  commandes: ['Commercial & Ventes', 'Commandes'],
+  logistique: ['Commercial & Ventes', 'Logistique'],
+  paiements: ['Commercial & Ventes', 'Paiements & Factures'],
+  reclamations: ['Commercial & Ventes', 'Réclamations'],
+  produits: ['Catalogue & Appro', 'Produits'],
+  achats: ['Catalogue & Appro', 'Achats'],
+  fournisseurs: ['Catalogue & Appro', 'Fournisseurs'],
+  assistant_ia: ['Service Client IA', 'Assistant IA'],
+  conversations: ['Service Client IA', 'Conversations'],
+  settings_ia: ['Paramètres', 'Paramètres IA'],
+};
+
+const FORMATIONS_MENU: Record<string, [string, string]> = {
+  dashboard: ['Direction', 'Dashboard'],
+  analytics: ['Direction', 'Analytics'],
+  leads: ['Candidats & Cours', 'Leads & Candidats'],
+  formations: ['Candidats & Cours', 'Formations'],
+  calendrier: ['Candidats & Cours', 'Calendrier'],
+  relance: ['Candidats & Cours', 'Relance Candidats'],
+  paiements: ['Finance & SAV', 'Paiements Fractionnés'],
+  reclamations: ['Finance & SAV', 'Réclamations / SAV'],
+  avis: ['Finance & SAV', 'Avis Après Formations'],
+  assistant_ia: ['Support & IA', 'Assistant IA'],
+  conversations: ['Support & IA', 'Conversations'],
+  settings_ia: ['Support & IA', 'Paramètres IA'],
+};
+
 export const ErpLayout: React.FC = () => {
-  const { brandId } = useParams<{ brandId: string }>();
+  const { brandId, '*': menuPath } = useParams<{ brandId: string; '*': string }>();
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
 
@@ -65,9 +101,26 @@ export const ErpLayout: React.FC = () => {
   const brand = BRANDS[validBrandId];
   const isFormations = validBrandId === 'formations';
 
-  const [currentMenu, setCurrentMenu] = useState<string>('dashboard');
+  // Le menu actif est porté par l'URL : il survit au rafraîchissement et au bouton Précédent
+  const menuEntries = isFormations ? FORMATIONS_MENU : STANDARD_MENU;
+  const requestedMenu = (menuPath || '').split('/')[0];
+  const currentMenu = requestedMenu in menuEntries ? requestedMenu : 'dashboard';
+  const setCurrentMenu = (id: string) => navigate(`/erp/${validBrandId}/${id}`);
+  const [currentSection, currentLabel] = menuEntries[currentMenu];
+
+  // À chaque changement d'écran : retour en haut et fondu d'entrée (sans remonter les composants)
+  const viewRef = React.useRef<HTMLDivElement>(null);
+  React.useEffect(() => {
+    window.scrollTo({ top: 0 });
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduceMotion) {
+      viewRef.current?.animate?.([{ opacity: 0 }, { opacity: 1 }], { duration: 260, easing: 'ease-out' });
+    }
+  }, [currentMenu, validBrandId]);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [globalSearch, setGlobalSearch] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchInputRef = React.useRef<HTMLInputElement>(null);
 
   // Sidebar collapsible state
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -94,20 +147,21 @@ export const ErpLayout: React.FC = () => {
     ...INITIAL_LEADS_COSMETICS,
     ...INITIAL_LEADS_REHAB,
     ...INITIAL_LEADS_HUILES,
-    ...INITIAL_LEADS_FORMATIONS
+    ...INITIAL_LEADS_FORMATIONS,
+    ...EXTRA_LEADS
   ]);
 
   const [products, setProducts] = useLocalStorage<Product[]>('am_erp_products', INITIAL_PRODUCTS);
   const [courses, setCourses] = useLocalStorage<TrainingCourse[]>('am_erp_trainings', INITIAL_TRAINING_COURSES);
   const [reviews, setReviews] = useLocalStorage<TrainingReview[]>('am_erp_training_reviews', INITIAL_TRAINING_REVIEWS);
   const [emailTemplates, setEmailTemplates] = useLocalStorage<EmailTemplate[]>('am_erp_email_templates', INITIAL_EMAIL_TEMPLATES);
-  const [quotes] = useLocalStorage('am_erp_quotes', INITIAL_QUOTES);
-  const [orders] = useLocalStorage('am_erp_orders', INITIAL_ORDERS);
-  const [logistics] = useLocalStorage('am_erp_logistics', INITIAL_LOGISTICS);
-  const [invoices] = useLocalStorage('am_erp_invoices', INITIAL_INVOICES);
+  const [quotes] = useLocalStorage('am_erp_quotes_v2', INITIAL_QUOTES);
+  const [orders] = useLocalStorage('am_erp_orders_v2', INITIAL_ORDERS);
+  const [logistics] = useLocalStorage('am_erp_logistics_v2', INITIAL_LOGISTICS);
+  const [invoices] = useLocalStorage('am_erp_invoices_v2', INITIAL_INVOICES);
   const [claims, setClaims] = useLocalStorage('am_erp_claims', INITIAL_CLAIMS);
   const [suppliers, setSuppliers] = useLocalStorage('am_erp_suppliers', INITIAL_SUPPLIERS);
-  const [purchaseOrders] = useLocalStorage('am_erp_pos', INITIAL_PURCHASE_ORDERS);
+  const [purchaseOrders] = useLocalStorage('am_erp_pos_v2', INITIAL_PURCHASE_ORDERS);
 
   const [chatbotConfigs, setChatbotConfigs] = useLocalStorage('am_chatbot_configs', INITIAL_CHATBOT_CONFIGS);
   const [conversations, setConversations] = useLocalStorage('am_conversations', INITIAL_CONVERSATIONS);
@@ -125,6 +179,29 @@ export const ErpLayout: React.FC = () => {
       ));
     }
   }, [conversations, setConversations]);
+
+  // Ajoute une seule fois les données de démonstration complémentaires aux listes
+  // modifiables déjà enregistrées dans le navigateur (contacts, fournisseurs),
+  // sans toucher aux éléments créés, modifiés ou supprimés par l'utilisateur ensuite.
+  React.useEffect(() => {
+    const SEED_KEY = 'am_demo_seed_version';
+    if (window.localStorage.getItem(SEED_KEY) === '2') return;
+    const missingLeads = EXTRA_LEADS.filter((extra) => !leads.some((l) => l.id === extra.id));
+    if (missingLeads.length > 0) setLeads([...leads, ...missingLeads]);
+    const missingSuppliers = EXTRA_SUPPLIERS.filter((extra) => !suppliers.some((s) => s.id === extra.id));
+    if (missingSuppliers.length > 0) setSuppliers([...suppliers, ...missingSuppliers]);
+    window.localStorage.setItem(SEED_KEY, '2');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Rafraîchit les anciennes photos génériques conservées dans le localStorage
+  // (les images personnalisées par l'utilisateur ne sont pas touchées)
+  React.useEffect(() => {
+    const nextProducts = refreshLegacyImages(products, INITIAL_PRODUCTS, (p) => brandFallbackImage(p.brandId));
+    if (nextProducts !== products) setProducts(nextProducts);
+    const nextCourses = refreshLegacyImages(courses, INITIAL_TRAINING_COURSES, () => brandFallbackImage('formations'));
+    if (nextCourses !== courses) setCourses(nextCourses);
+  }, [products, courses, setProducts, setCourses]);
 
   const [selected360Lead, setSelected360Lead] = useState<LeadOrClient | null>(null);
   const [is360ModalOpen, setIs360ModalOpen] = useState(false);
@@ -157,6 +234,67 @@ export const ErpLayout: React.FC = () => {
     }));
   };
 
+  // Raccourcis clavier : Ctrl/Cmd+K ouvre la recherche, Échap ferme les panneaux ouverts
+  React.useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+      if (e.key === 'Escape') {
+        setSearchOpen(false);
+        setIs360ModalOpen(false);
+        setIsProductDrawerOpen(false);
+        setMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  // Recherche globale : écrans, contacts et catalogue de la filiale active
+  const searchQuery = globalSearch.trim().toLowerCase();
+  const searchResults: { key: string; kind: string; title: string; subtitle: string; run: () => void }[] = [];
+  if (searchQuery.length >= 2) {
+    const matches = (...values: (string | undefined)[]) =>
+      values.some((v) => v?.toLowerCase().includes(searchQuery));
+
+    Object.entries(menuEntries).forEach(([id, [section, label]]) => {
+      if (matches(label, section)) {
+        searchResults.push({ key: `menu-${id}`, kind: 'Écran', title: label, subtitle: section, run: () => setCurrentMenu(id) });
+      }
+    });
+    leads
+      .filter((l) => l.brandId === validBrandId && matches(l.name, l.company, l.city))
+      .slice(0, 5)
+      .forEach((l) => {
+        searchResults.push({ key: `lead-${l.id}`, kind: 'Contact', title: l.name, subtitle: l.company || l.city, run: () => handleOpenLead(l) });
+      });
+    if (isFormations) {
+      courses
+        .filter((c) => matches(c.title))
+        .slice(0, 5)
+        .forEach((c) => {
+          searchResults.push({ key: `course-${c.id}`, kind: 'Formation', title: c.title, subtitle: 'Catalogue des formations', run: () => setCurrentMenu('formations') });
+        });
+    } else {
+      products
+        .filter((p) => p.brandId === validBrandId && matches(p.name, p.sku, p.category))
+        .slice(0, 5)
+        .forEach((p) => {
+          searchResults.push({ key: `product-${p.id}`, kind: 'Produit', title: p.name, subtitle: `${p.sku} • ${p.category}`, run: () => handleOpenProduct(p) });
+        });
+    }
+  }
+  const visibleResults = searchResults.slice(0, 10);
+
+  const runSearchResult = (run: () => void) => {
+    run();
+    setGlobalSearch('');
+    setSearchOpen(false);
+    searchInputRef.current?.blur();
+  };
+
   // Helper for rendering nav button
   const renderNavButton = (id: string, label: string, icon: React.ReactNode, badge?: React.ReactNode) => {
     const isActive = currentMenu === id;
@@ -165,13 +303,21 @@ export const ErpLayout: React.FC = () => {
         key={id}
         onClick={() => { setCurrentMenu(id); setMobileMenuOpen(false); }}
         title={isSidebarCollapsed ? label : undefined}
-        className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-2 py-2.5' : 'justify-between px-3 py-2'} rounded-lg text-xs font-medium transition-all ${
+        aria-current={isActive ? 'page' : undefined}
+        style={isActive ? { backgroundColor: `${brand.primaryColor}26`, boxShadow: `inset 0 0 0 1px ${brand.primaryColor}55` } : undefined}
+        className={`relative w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-2 py-2.5' : 'justify-between px-3 py-2'} rounded-lg text-xs font-medium transition-all ${
           isActive
-            ? 'bg-slate-900 text-white font-semibold border border-slate-800 shadow-xs'
+            ? 'text-white font-semibold'
             : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
         }`}
       >
-        <span className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'gap-2.5'}`}>
+        {isActive && (
+          <span
+            className="absolute left-0 top-1.5 bottom-1.5 w-[3px] rounded-full"
+            style={{ backgroundColor: brand.primaryColor, filter: 'brightness(1.4)' }}
+          />
+        )}
+        <span className={`flex items-center min-w-0 ${isSidebarCollapsed ? 'justify-center' : 'gap-2.5'}`}>
           <span className={`${isActive ? 'text-white' : 'text-slate-400'}`}>
             {icon}
           </span>
@@ -201,7 +347,10 @@ export const ErpLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen w-full flex flex-col bg-slate-950 text-slate-100 selection:bg-orange-500 selection:text-white">
+    <div
+      className="min-h-screen w-full flex flex-col bg-slate-950 text-slate-100 selection:bg-orange-500 selection:text-white"
+      style={{ ['--brand-color' as any]: brand.primaryColor }}
+    >
       
       {/* HEADER SUPÉRIEUR GLOBAL SAAS (Pleine largeur, Barre de recherche globale, actions rapides, profil à droite) */}
       <header className="w-full px-6 py-3 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md sticky top-0 z-40 flex items-center justify-between gap-4">
@@ -210,6 +359,7 @@ export const ErpLayout: React.FC = () => {
         <div className="flex items-center gap-3">
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label={mobileMenuOpen ? "Fermer le menu" : "Ouvrir le menu"}
             className="p-1.5 rounded-lg text-slate-400 md:hidden hover:bg-slate-900"
           >
             {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -233,14 +383,66 @@ export const ErpLayout: React.FC = () => {
         {/* Global Search Bar (Style Touvis AI SaaS) */}
         <div className="flex-1 max-w-md hidden md:block">
           <div className="relative">
-            <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
+            <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
+              ref={searchInputRef}
               type="text"
+              role="combobox"
+              aria-expanded={searchOpen && searchQuery.length >= 2}
+              aria-controls="global-search-results"
+              aria-label="Recherche globale"
               value={globalSearch}
-              onChange={(e) => setGlobalSearch(e.target.value)}
-              placeholder="Recherche globale (leads, commandes, stocks, fiches)..."
-              className="w-full pl-8 pr-4 py-1.5 text-xs rounded-lg bg-slate-900/80 border border-slate-800 text-slate-200 placeholder-slate-400 focus:outline-none focus:border-slate-700 transition-colors"
+              onChange={(e) => { setGlobalSearch(e.target.value); setSearchOpen(true); }}
+              onFocus={() => setSearchOpen(true)}
+              onBlur={() => setSearchOpen(false)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && visibleResults.length > 0) {
+                  e.preventDefault();
+                  runSearchResult(visibleResults[0].run);
+                }
+              }}
+              placeholder="Rechercher un écran, un contact, un produit..."
+              className="w-full pl-8 pr-14 py-2 text-xs rounded-lg bg-slate-900/80 border border-slate-800 text-slate-200 placeholder-slate-400 transition-colors"
             />
+            <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] font-mono text-slate-400 px-1.5 py-0.5 rounded border border-slate-700 bg-slate-950 pointer-events-none">
+              Ctrl K
+            </kbd>
+
+            {searchOpen && searchQuery.length >= 2 && (
+              <div
+                id="global-search-results"
+                role="listbox"
+                className="absolute left-0 right-0 top-full mt-2 rounded-xl bg-slate-900 border border-slate-700 shadow-2xl overflow-hidden z-50"
+              >
+                {visibleResults.length > 0 ? (
+                  <ul className="max-h-80 overflow-y-auto py-1.5">
+                    {visibleResults.map((r, i) => (
+                      <li key={r.key} role="option" aria-selected={i === 0}>
+                        <button
+                          type="button"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => runSearchResult(r.run)}
+                          className={`w-full px-3.5 py-2 flex items-center gap-3 text-left hover:bg-slate-800/80 transition-colors ${i === 0 ? 'bg-slate-800/50' : ''}`}
+                        >
+                          <span className="shrink-0 w-[68px] text-center text-[10px] font-semibold px-1.5 py-0.5 rounded border border-slate-700 text-slate-300 bg-slate-950">
+                            {r.kind}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block text-xs font-semibold text-slate-100 truncate">{r.title}</span>
+                            <span className="block text-[11px] text-slate-400 truncate">{r.subtitle}</span>
+                          </span>
+                          {i === 0 && <span className="shrink-0 text-[10px] text-slate-400">Entrée ↵</span>}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="px-4 py-5 text-xs text-slate-400 text-center">
+                    Aucun résultat pour « {globalSearch.trim()} » dans {brand.name}.
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -278,7 +480,8 @@ export const ErpLayout: React.FC = () => {
           <button
             onClick={() => navigate('/')}
             className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-            title="Quitter"
+            title="Quitter et revenir au portail"
+            aria-label="Quitter et revenir au portail"
           >
             <LogOut className="w-4 h-4" />
           </button>
@@ -288,9 +491,17 @@ export const ErpLayout: React.FC = () => {
       {/* FULL WIDTH LAYOUT: SIDEBAR (Fixe à gauche & indépendante) + WORKSPACE (Pleine largeur) */}
       <div className="flex-1 w-full flex relative">
         
+        {mobileMenuOpen && (
+          <div
+            className="fixed inset-0 top-[57px] z-20 bg-slate-950/70 backdrop-blur-sm md:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+
         {/* SIDEBAR NAVIGATION (Fixe à gauche, fond opaque sans interférence avec l'anim, scroll indépendant) */}
         <aside className={`
-          fixed md:sticky top-0 md:top-[57px] h-screen md:h-[calc(100vh-57px)] z-30 bg-slate-950 border-r border-slate-800/80 p-3 flex flex-col justify-between shrink-0 transition-all duration-300 overflow-y-auto
+          fixed md:sticky top-[57px] h-[calc(100vh-57px)] z-30 bg-slate-950 border-r border-slate-800/80 p-3 flex flex-col justify-between shrink-0 transition-all duration-300 overflow-y-auto
           ${isSidebarCollapsed ? 'w-16' : 'w-64'}
           ${mobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'}
         `}>
@@ -472,6 +683,23 @@ export const ErpLayout: React.FC = () => {
           {/* Animated Background applies exclusively inside this main content area */}
           <AnimatedBackground variant={brand.id} opacity={0.3} fixed={false} />
 
+          {/* Fil d'Ariane : situe l'écran courant dans la filiale */}
+          <nav aria-label="Fil d'Ariane" className="mb-4 flex items-center gap-1.5 text-[11px] text-slate-400">
+            <button
+              type="button"
+              onClick={() => setCurrentMenu('dashboard')}
+              className="font-medium hover:text-white transition-colors"
+            >
+              {brand.name}
+            </button>
+            <ChevronRight className="w-3 h-3 text-slate-600" />
+            <span>{currentSection}</span>
+            <ChevronRight className="w-3 h-3 text-slate-600" />
+            <span className="font-semibold text-slate-200" aria-current="page">{currentLabel}</span>
+          </nav>
+
+          <div ref={viewRef}>
+
           {/* Formations Sub-views routing */}
           {isFormations && ['dashboard', 'leads', 'formations', 'calendrier', 'relance', 'paiements', 'analytics', 'avis', 'conversations', 'settings_ia'].includes(currentMenu) && (
             <FormationsErpModule
@@ -621,6 +849,7 @@ export const ErpLayout: React.FC = () => {
             />
           )}
 
+          </div>
         </main>
       </div>
 

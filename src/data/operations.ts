@@ -1,4 +1,12 @@
 import { Quote, Order, LogisticsShipment, Invoice, Claim, PurchaseSupplier, PurchaseOrder } from '../types';
+import {
+  EXTRA_QUOTES,
+  EXTRA_ORDERS,
+  EXTRA_LOGISTICS,
+  EXTRA_INVOICES,
+  EXTRA_SUPPLIERS,
+  EXTRA_PURCHASE_ORDERS,
+} from './mockExtras';
 
 export const INITIAL_QUOTES: Quote[] = [
   {
@@ -52,7 +60,8 @@ export const INITIAL_QUOTES: Quote[] = [
     totalTTC: 18480,
     status: 'Envoyé',
     itemsCount: 5
-  }
+  },
+  ...EXTRA_QUOTES,
 ];
 
 export const INITIAL_ORDERS: Order[] = [
@@ -107,7 +116,8 @@ export const INITIAL_ORDERS: Order[] = [
     logisticsStatus: 'Livré',
     trackingNumber: 'COLI-9920141',
     carrier: 'Colissimo'
-  }
+  },
+  ...EXTRA_ORDERS,
 ];
 
 export const INITIAL_LOGISTICS: LogisticsShipment[] = [
@@ -146,7 +156,8 @@ export const INITIAL_LOGISTICS: LogisticsShipment[] = [
     dateShipped: '2026-10-05',
     estimatedDelivery: '2026-10-08',
     temperatureControlled: true
-  }
+  },
+  ...EXTRA_LOGISTICS,
 ];
 
 export const INITIAL_INVOICES: Invoice[] = [
@@ -201,7 +212,8 @@ export const INITIAL_INVOICES: Invoice[] = [
     remainingDue: 0,
     status: 'Payée',
     paymentMethod: 'Virement'
-  }
+  },
+  ...EXTRA_INVOICES,
 ];
 
 export const INITIAL_CLAIMS: Claim[] = [
@@ -375,7 +387,8 @@ export const INITIAL_SUPPLIERS: PurchaseSupplier[] = [
     email: 'coop.albaraka@argan.ma',
     reliabilityScore: 99,
     leadTimeDays: 4
-  }
+  },
+  ...EXTRA_SUPPLIERS,
 ];
 
 export const INITIAL_PURCHASE_ORDERS: PurchaseOrder[] = [
@@ -400,5 +413,6 @@ export const INITIAL_PURCHASE_ORDERS: PurchaseOrder[] = [
     totalAmount: 78000,
     status: 'Contrôle qualité OK',
     itemsSummary: '1 200 kg Amandons d\'argan 1er choix'
-  }
+  },
+  ...EXTRA_PURCHASE_ORDERS,
 ];

@@ -196,6 +196,8 @@ export const CommercialSalesView: React.FC<CommercialSalesViewProps> = ({
   // Quotes, Orders, Invoices, Claims for other subviews
   const brandQuotes = quotes.filter(q => q.brandId === brand.id);
   const brandOrders = orders.filter(o => o.brandId === brand.id);
+  // Une expédition appartient à la filiale dont la commande porte le même numéro
+  const brandLogistics = logistics.filter(l => brandOrders.some(o => o.orderNumber === l.orderNumber));
   const brandInvoices = invoices.filter(i => i.brandId === brand.id);
   const brandClaims = claims.filter(c => c.brandId === brand.id);
 
@@ -366,7 +368,7 @@ export const CommercialSalesView: React.FC<CommercialSalesViewProps> = ({
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-brand-orange hover:bg-brand-orange-hover transition-colors flex items-center gap-1.5 shadow-sm shrink-0"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>{isClientView ? '+ Nouveau client' : '+ Nouveau lead'}</span>
+                <span>{isClientView ? 'Nouveau client' : 'Nouveau lead'}</span>
               </button>
             </div>
           </div>
@@ -662,7 +664,7 @@ export const CommercialSalesView: React.FC<CommercialSalesViewProps> = ({
             <div>
               <h2 className="text-base font-semibold text-white flex items-center gap-2">
                 <Truck className="w-4 h-4 text-brand-orange" />
-                Suivi Expéditions & Logistique ({logistics.length})
+                Suivi Expéditions & Logistique ({brandLogistics.length})
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">
                 Cliquez sur n'importe quel colis pour ouvrir la fiche de traçabilité et les scans d'acheminement.
@@ -683,7 +685,7 @@ export const CommercialSalesView: React.FC<CommercialSalesViewProps> = ({
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                {logistics.map((l) => (
+                {brandLogistics.map((l) => (
                   <tr 
                     key={l.id} 
                     onClick={() => setSelectedLogisticsDetail(l)}
@@ -834,7 +836,7 @@ export const CommercialSalesView: React.FC<CommercialSalesViewProps> = ({
               className="px-4 py-2 rounded-lg text-xs font-semibold text-white bg-brand-orange hover:bg-brand-orange-hover transition-colors flex items-center gap-2 shadow-sm self-start sm:self-auto"
             >
               <Plus className="w-4 h-4" />
-              + Nouvelle réclamation
+              Nouvelle réclamation
             </button>
           </div>
 

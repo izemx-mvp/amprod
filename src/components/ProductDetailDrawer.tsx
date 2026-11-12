@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Product, BrandConfig } from '../types';
 import { formatCurrency } from '../utils/cn';
+import { brandFallbackImage } from '../data/images';
 
 interface ProductDetailDrawerProps {
   product: Product | null;
@@ -37,9 +38,15 @@ export const ProductDetailDrawer: React.FC<ProductDetailDrawerProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/70 backdrop-blur-md animate-fade-in flex justify-end">
+    <div
+      className="fixed inset-0 z-50 overflow-hidden bg-slate-950/70 backdrop-blur-md animate-fade-in flex justify-end"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Fiche produit"
+    >
       <div 
-        className="w-full max-w-xl bg-slate-900/90 backdrop-blur-md border-l border-slate-800 h-full shadow-2xl flex flex-col overflow-y-auto"
+        className="drawer-enter w-full max-w-xl bg-slate-900/90 backdrop-blur-md border-l border-slate-800 h-full shadow-2xl flex flex-col overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -54,6 +61,8 @@ export const ProductDetailDrawer: React.FC<ProductDetailDrawerProps> = ({
           </div>
           <button
             onClick={onClose}
+            aria-label="Fermer"
+            title="Fermer (Échap)"
             className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -68,7 +77,7 @@ export const ProductDetailDrawer: React.FC<ProductDetailDrawerProps> = ({
               src={product.image} 
               alt={product.name}
               onError={(e) => {
-                e.currentTarget.src = 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&auto=format&fit=crop&q=80';
+                e.currentTarget.src = brandFallbackImage(product.brandId);
               }}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
             />

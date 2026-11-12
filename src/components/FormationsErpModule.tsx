@@ -66,6 +66,22 @@ import {
 } from '../types';
 import { AIDisclaimer } from './FooterAndDisclaimers';
 import { formatCurrency, formatDate, formatDateTime } from '../utils/cn';
+import { brandFallbackImage } from '../data/images';
+import { LabelList } from 'recharts';
+import { AreaGradient, CHART_SURFACE, ChartLegend, ChartTooltip, SERIES, activeDot, barCursor, formatCompact, gridProps, lineCursor, xAxisProps, yAxisProps } from './ChartKit';
+
+// ---------- Utilitaires du calendrier des formations ----------
+const pad2 = (n: number) => String(n).padStart(2, '0');
+const toIsoDate = (d: Date) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+const addDaysIso = (iso: string, days: number) => {
+  const d = new Date(`${iso}T00:00:00`);
+  d.setDate(d.getDate() + days);
+  return toIsoDate(d);
+};
+const MONTHS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+const WEEKDAYS_FR = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+// Une teinte fixe par formation (ordre du catalogue), distinctes entre voisines
+const FORMATION_COLORS = ['#3987e5', '#d95926', '#199e70', '#c98500', '#d55181', '#008300', '#9085e9', '#e66767'];
 
 interface FormationsErpModuleProps {
   brand: BrandConfig;
@@ -132,7 +148,7 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
     priceTotal: 8500,
     minDeposit: 3000,
     instructor: 'Dr. Leila Zerouali',
-    image: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&auto=format&fit=crop&q=80',
+    image: brandFallbackImage('formations'),
     description: '',
   });
   const [coursePage, setCoursePage] = useState(1);
@@ -141,6 +157,7 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
   // 3. CALENDRIER INTERACTIF (Jour / Mois / Année) & SESSION MODAL
   const [calendarViewMode, setCalendarViewMode] = useState<'day' | 'month' | 'year'>('month');
   const [currentCalendarDate, setCurrentCalendarDate] = useState(new Date(2026, 10, 1)); // Nov 2026
+  const [selectedCalendarDay, setSelectedCalendarDay] = useState(() => toIsoDate(new Date()));
   const [isSessionModalOpen, setIsSessionModalOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<{ courseId: string; session: TrainingSession } | null>(null);
   const [sessionFormData, setSessionFormData] = useState({
@@ -152,6 +169,16 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
     enrolledCount: 1,
     status: 'Planifiée' as 'Planifiée' | 'En cours' | 'Clôturée' | 'Complète'
   });
+
+  // Échap ferme la fenêtre de planification
+  React.useEffect(() => {
+    if (!isSessionModalOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setIsSessionModalOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isSessionModalOpen]);
 
   // 4. PAIEMENTS FRACTIONNÉS DRAWER / MODAL
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -324,7 +351,7 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
       priceTotal: 8500,
       minDeposit: 3000,
       instructor: 'Dr. Leila Zerouali',
-      image: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&auto=format&fit=crop&q=80',
+      image: brandFallbackImage('formations'),
       description: '',
     });
     setIsCourseModalOpen(true);
@@ -408,12 +435,18 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
   };
 
   // ---------- HANDLERS: CALENDRIER & SESSIONS ----------
-  const handleOpenNewSessionModal = () => {
+  // Planifie une formation : depuis le bouton (date par défaut) ou depuis une case du calendrier
+  const handleOpenNewSessionModal = (startIso?: unknown) => {
+    const firstCourse = courses[0];
+    const monthStart = toIsoDate(new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth(), 1));
+    const today = toIsoDate(new Date());
+    const defaultStart = today.slice(0, 7) === monthStart.slice(0, 7) ? today : monthStart;
+    const startDate = typeof startIso === 'string' ? startIso : defaultStart;
     setEditingSession(null);
     setSessionFormData({
-      courseId: courses[0]?.id || '',
-      startDate: '2026-11-15',
-      endDate: '2026-11-18',
+      courseId: firstCourse?.id || '',
+      startDate,
+      endDate: addDaysIso(startDate, Math.max(1, firstCourse?.durationDays || 1) - 1),
       location: 'Campus AM PROD Laboratoires — Casablanca',
       maxAttendees: 12,
       enrolledCount: 1,
@@ -437,7 +470,7 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
   };
 
   const handleDeleteSession = (courseId: string, sessionId: string) => {
-    if (window.confirm("Êtes-vous sûr de vouloir supprimer cette session planifiée ?")) {
+    if (window.confirm("Retirer cette formation du calendrier ?")) {
       const updated = courses.map(c => {
         if (c.id === courseId) {
           return {
@@ -541,7 +574,30 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
   const displayedCourses = courses.slice((coursePage - 1) * coursesPerPage, coursePage * coursesPerPage);
 
   // All planned sessions flattened
-  const allSessions = courses.flatMap(c => c.sessions.map(s => ({ ...s, courseTitle: c.title, courseCode: c.code })));
+  const allSessions = courses.flatMap(c => c.sessions.map(s => ({ ...s, courseTitle: c.title, courseCode: c.code, instructor: c.instructor })));
+
+  // ---------- Calendrier des formations : données du mois affiché ----------
+  const calYear = currentCalendarDate.getFullYear();
+  const calMonth = currentCalendarDate.getMonth();
+  const monthPrefix = `${calYear}-${pad2(calMonth + 1)}`;
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const leadingBlanks = (new Date(calYear, calMonth, 1).getDay() + 6) % 7; // semaine commençant le lundi
+  const todayIso = toIsoDate(new Date());
+  const formationColor = (courseId: string) =>
+    FORMATION_COLORS[Math.max(0, courses.findIndex(c => c.id === courseId)) % FORMATION_COLORS.length];
+  const formationsOn = (iso: string) => allSessions.filter(s => s.startDate <= iso && s.endDate >= iso);
+  const formationsInMonth = (year: number, month: number) => {
+    const prefix = `${year}-${pad2(month + 1)}`;
+    return allSessions.filter(s => s.startDate <= `${prefix}-31` && s.endDate >= `${prefix}-01`);
+  };
+  const monthFormations = formationsInMonth(calYear, calMonth);
+  const shiftMonth = (delta: number) => setCurrentCalendarDate(new Date(calYear, calMonth + delta, 1));
+  const selectedDayFormations = formationsOn(selectedCalendarDay);
+  const selectedDayLabel = new Date(`${selectedCalendarDay}T00:00:00`).toLocaleDateString('fr-FR', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  });
+  // Durée de la formation choisie dans la modale : sert à proposer la date de fin
+  const formCourseDuration = Math.max(1, courses.find(c => c.id === sessionFormData.courseId)?.durationDays || 1);
 
   return (
     <div className="w-full space-y-6">
@@ -570,7 +626,7 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
                 className="px-3.5 py-2 rounded-lg text-xs font-semibold text-white bg-brand-orange hover:bg-brand-orange-hover transition-colors flex items-center gap-1.5 shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
-                + Nouveau lead
+                Nouveau lead
               </button>
             </div>
           </div>
@@ -633,7 +689,7 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
               {/* Top 1 */}
               <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 flex items-start gap-4">
                 <img
-                  src={courses[0]?.image || 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&auto=format&fit=crop&q=80'}
+                  src={courses[0]?.image || brandFallbackImage('formations')}
                   alt={courses[0]?.title}
                   className="w-24 h-24 rounded-lg object-cover border border-slate-800 shrink-0"
                 />
@@ -660,7 +716,7 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
               {/* Top 2 */}
               <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 flex items-start gap-4">
                 <img
-                  src={courses[1]?.image || 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=800&auto=format&fit=crop&q=80'}
+                  src={courses[1]?.image || 'https://images.unsplash.com/photo-1554224155-1696413565d3?w=800&auto=format&fit=crop&q=80'}
                   alt={courses[1]?.title}
                   className="w-24 h-24 rounded-lg object-cover border border-slate-800 shrink-0"
                 />
@@ -806,40 +862,60 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
                 </span>
               </div>
 
-              <div className="h-64 w-full">
+              <ChartLegend
+                items={[
+                  { label: 'Apprenants inscrits', color: SERIES.blue },
+                  { label: 'Capacité maximale', color: SERIES.neutral, dashed: true },
+                ]}
+              />
+
+              <div className="h-60 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart
                     data={[
-                      { month: 'Mai', inscrits: 28, capacite: 32, tauxRemplissage: 87.5 },
-                      { month: 'Juin', inscrits: 30, capacite: 32, tauxRemplissage: 93.7 },
-                      { month: 'Juil', inscrits: 22, capacite: 24, tauxRemplissage: 91.6 },
-                      { month: 'Août', inscrits: 16, capacite: 20, tauxRemplissage: 80.0 },
-                      { month: 'Sept', inscrits: 36, capacite: 40, tauxRemplissage: 90.0 },
-                      { month: 'Octobre', inscrits: 42, capacite: 45, tauxRemplissage: 93.3 },
-                      { month: 'Novembre', inscrits: 38, capacite: 40, tauxRemplissage: 95.0 },
-                      { month: 'Décembre', inscrits: 34, capacite: 36, tauxRemplissage: 94.4 },
+                      { month: 'Mai', inscrits: 28, capacite: 32 },
+                      { month: 'Juin', inscrits: 30, capacite: 32 },
+                      { month: 'Juil', inscrits: 22, capacite: 24 },
+                      { month: 'Août', inscrits: 16, capacite: 20 },
+                      { month: 'Sept', inscrits: 36, capacite: 40 },
+                      { month: 'Oct', inscrits: 42, capacite: 45 },
+                      { month: 'Nov', inscrits: 38, capacite: 40 },
+                      { month: 'Déc', inscrits: 34, capacite: 36 },
                     ]}
-                    margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                    margin={{ top: 10, right: 12, left: -8, bottom: 0 }}
                   >
                     <defs>
-                      <linearGradient id="colorInscrits" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                      </linearGradient>
-                      <linearGradient id="colorCapacite" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#0284c7" stopOpacity={0.2}/>
-                        <stop offset="95%" stopColor="#0284c7" stopOpacity={0}/>
-                      </linearGradient>
+                      <AreaGradient id="enrolledFill" color={SERIES.blue} />
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                    <XAxis dataKey="month" stroke="#64748b" tick={{ fontSize: 11 }} />
-                    <YAxis stroke="#64748b" tick={{ fontSize: 11 }} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#090d16', borderColor: '#334155', borderRadius: '0.5rem', fontSize: '11px', color: '#fff' }}
-                      itemStyle={{ color: '#e2e8f0' }}
+                    <CartesianGrid {...gridProps} />
+                    <XAxis dataKey="month" {...xAxisProps} />
+                    <YAxis {...yAxisProps} />
+                    <Tooltip
+                      cursor={lineCursor}
+                      content={<ChartTooltip formatValue={(val) => `${val} places`} />}
                     />
-                    <Area type="monotone" dataKey="capacite" name="Capacité max" stroke="#0284c7" strokeDasharray="4 4" fillOpacity={1} fill="url(#colorCapacite)" />
-                    <Area type="monotone" dataKey="inscrits" name="Apprenants inscrits" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorInscrits)" />
+                    <Area
+                      type="monotone"
+                      dataKey="capacite"
+                      name="Capacité maximale"
+                      stroke={SERIES.neutral}
+                      strokeWidth={2}
+                      strokeDasharray="5 5"
+                      fill="none"
+                      dot={false}
+                      activeDot={activeDot(SERIES.neutral)}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="inscrits"
+                      name="Apprenants inscrits"
+                      stroke={SERIES.blue}
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      fill="url(#enrolledFill)"
+                      dot={false}
+                      activeDot={activeDot(SERIES.blue)}
+                    />
                   </AreaChart>
                 </ResponsiveContainer>
               </div>
@@ -866,26 +942,35 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={[
-                      { name: 'Émulsions', ca: 485000, inscrits: 57 },
-                      { name: 'Savonnerie', ca: 312000, inscrits: 52 },
-                      { name: 'DIP & ISO', ca: 248000, inscrits: 26 },
-                      { name: 'Distillation', ca: 142000, inscrits: 28 },
-                      { name: 'Marketing', ca: 76000, inscrits: 19 },
+                      { name: 'Émulsions', ca: 485000 },
+                      { name: 'Savonnerie', ca: 312000 },
+                      { name: 'DIP & ISO', ca: 248000 },
+                      { name: 'Distillation', ca: 142000 },
+                      { name: 'Marketing', ca: 76000 },
                     ]}
-                    margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                    margin={{ top: 24, right: 12, left: 0, bottom: 0 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                    <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 11 }} />
-                    <YAxis 
-                      stroke="#64748b" 
-                      tick={{ fontSize: 10 }}
-                      tickFormatter={(val) => `${(val / 1000).toFixed(0)}k`}
+                    <CartesianGrid {...gridProps} />
+                    <XAxis dataKey="name" {...xAxisProps} />
+                    <YAxis {...yAxisProps} tickFormatter={formatCompact} />
+                    <Tooltip
+                      cursor={barCursor}
+                      content={
+                        <ChartTooltip
+                          formatValue={(val) => `${val.toLocaleString('fr-FR')} MAD`}
+                          seriesLabel={() => "Chiffre d'affaires"}
+                        />
+                      }
                     />
-                    <Tooltip 
-                      formatter={(val: any) => [`${Number(val).toLocaleString()} MAD`, 'Chiffre d\'Affaires']}
-                      contentStyle={{ backgroundColor: '#090d16', borderColor: '#334155', borderRadius: '0.5rem', fontSize: '11px', color: '#fff' }}
-                    />
-                    <Bar dataKey="ca" fill="#f97316" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="ca" fill={SERIES.orange} radius={[4, 4, 0, 0]} maxBarSize={28}>
+                      <LabelList
+                        dataKey="ca"
+                        position="top"
+                        offset={8}
+                        formatter={(val: number) => formatCompact(val)}
+                        style={{ fill: '#cbd5e1', fontSize: 11, fontWeight: 600 }}
+                      />
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -910,11 +995,11 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
 
               <div className="space-y-3 pt-1">
                 {[
-                  { step: '1. Candidats & Demandes d\'Information', count: 480, pct: '100%', barWidth: 'w-full', color: 'bg-blue-500' },
-                  { step: '2. Qualification IA & Entretien Sofia', count: 288, pct: '60.0%', barWidth: 'w-[60%]', color: 'bg-sky-500' },
-                  { step: '3. Devis & Conventions Transmis', count: 182, pct: '37.9%', barWidth: 'w-[38%]', color: 'bg-amber-500' },
-                  { step: '4. Acomptes Versés (Inscrits Confirmés)', count: 144, pct: '30.0%', barWidth: 'w-[30%]', color: 'bg-emerald-500' },
-                  { step: '5. Présents le Jour J & Certifiés', count: 139, pct: '28.9%', barWidth: 'w-[29%]', color: 'bg-purple-500' },
+                  { step: '1. Candidats & Demandes d\'Information', count: 480, pct: '100%', barWidth: 'w-full', color: 'bg-[#3987e5]' },
+                  { step: '2. Qualification IA & Entretien Sofia', count: 288, pct: '60.0%', barWidth: 'w-[60%]', color: 'bg-[#3987e5]' },
+                  { step: '3. Devis & Conventions Transmis', count: 182, pct: '37.9%', barWidth: 'w-[38%]', color: 'bg-[#3987e5]' },
+                  { step: '4. Acomptes Versés (Inscrits Confirmés)', count: 144, pct: '30.0%', barWidth: 'w-[30%]', color: 'bg-[#3987e5]' },
+                  { step: '5. Présents le Jour J & Certifiés', count: 139, pct: '28.9%', barWidth: 'w-[29%]', color: 'bg-[#3987e5]' },
                 ].map((s, idx) => (
                   <div key={idx} className="space-y-1">
                     <div className="flex items-center justify-between text-xs">
@@ -924,8 +1009,8 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
                         <span className="text-slate-400 text-[10px]">({s.pct})</span>
                       </div>
                     </div>
-                    <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden">
-                      <div className={`h-full rounded-full transition-all duration-500 ${s.color} ${s.barWidth}`} />
+                    <div className="w-full bg-slate-800/60 rounded-full h-2.5 overflow-hidden">
+                      <div className={`h-full rounded-full transition-all duration-700 ${s.color} ${s.barWidth}`} />
                     </div>
                   </div>
                 ))}
@@ -949,36 +1034,36 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
                 </span>
               </div>
 
-              <div className="h-44 w-full flex items-center justify-center">
+              <div className="relative h-44 w-full flex items-center justify-center">
+                <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-2xl font-bold tracking-tight text-white">84%</span>
+                  <span className="text-[10px] text-slate-400">présence totale</span>
+                </div>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={[
-                        { name: 'Assiduité 100%', value: 84, color: '#10b981' },
-                        { name: 'Assiduité >90%', value: 12, color: '#0284c7' },
+                        { name: 'Présence 100%', value: 84, color: '#10b981' },
+                        { name: 'Présence >90%', value: 12, color: '#0ea5e9' },
                         { name: 'Reports justifiés', value: 3, color: '#f59e0b' },
                         { name: 'Absences', value: 1, color: '#f43f5e' },
                       ]}
                       cx="50%"
                       cy="50%"
-                      innerRadius={45}
-                      outerRadius={70}
-                      paddingAngle={3}
+                      innerRadius={58}
+                      outerRadius={78}
+                      startAngle={90}
+                      endAngle={-270}
+                      cornerRadius={4}
+                      stroke={CHART_SURFACE}
+                      strokeWidth={2}
                       dataKey="value"
                     >
-                      {[
-                        { color: '#10b981' },
-                        { color: '#0284c7' },
-                        { color: '#f59e0b' },
-                        { color: '#f43f5e' },
-                      ].map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      {['#10b981', '#0ea5e9', '#f59e0b', '#f43f5e'].map((color, index) => (
+                        <Cell key={`cell-${index}`} fill={color} />
                       ))}
                     </Pie>
-                    <Tooltip 
-                      formatter={(val: any) => [`${val}%`, 'Proportion']}
-                      contentStyle={{ backgroundColor: '#090d16', borderColor: '#334155', borderRadius: '0.5rem', fontSize: '11px', color: '#fff' }}
-                    />
+                    <Tooltip content={<ChartTooltip formatValue={(val) => `${val}%`} />} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -1039,7 +1124,7 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
                 className="px-3.5 py-2 rounded-lg text-xs font-semibold text-white bg-brand-orange hover:bg-brand-orange-hover transition-colors flex items-center gap-1.5 shadow-sm shrink-0"
               >
                 <Plus className="w-3.5 h-3.5" />
-                + Nouveau lead
+                Nouveau lead
               </button>
             </div>
           </div>
@@ -1159,7 +1244,7 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
               className="px-3.5 py-2 rounded-lg text-xs font-semibold text-white bg-brand-orange hover:bg-brand-orange-hover transition-colors flex items-center gap-1.5 shadow-sm"
             >
               <Plus className="w-3.5 h-3.5" />
-              + Nouvelle formation
+              Nouvelle formation
             </button>
           </div>
 
@@ -1177,7 +1262,7 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
                       src={c.image} 
                       alt={c.title} 
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&auto=format&fit=crop&q=80';
+                        (e.target as HTMLImageElement).src = brandFallbackImage('formations');
                       }}
                       className="object-cover w-full h-48 rounded-lg" 
                     />
@@ -1283,154 +1368,306 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
         </div>
       )}
 
-      {/* 3. CALENDRIER & PLANIFICATION INTERACTIF (VRAI CALENDRIER JOUR / MOIS / ANNÉE) */}
+      {/* 3. CALENDRIER DES FORMATIONS (Jour / Mois / Année) */}
       {activeSubView === 'calendrier' && (
         <div className="w-full p-6 rounded-xl bg-slate-900/60 border border-slate-800/90 space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-slate-800">
             <div>
               <h2 className="text-base font-semibold text-white flex items-center gap-2">
                 <CalendarIcon className="w-4 h-4 text-brand-orange" />
-                Calendrier Interactif des Sessions
+                Calendrier des Formations
               </h2>
               <p className="text-xs text-slate-400">
-                Planifiez, modifiez et supprimez vos sessions d'ateliers en laboratoire certifié.
+                Cliquez sur une date pour y planifier une formation, ou sur une formation pour la modifier.
               </p>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {/* Toggles Jour / Mois / Année */}
               <div className="flex bg-slate-950 p-1 rounded-lg border border-slate-800 text-xs">
-                <button
-                  onClick={() => setCalendarViewMode('day')}
-                  className={`px-3 py-1 rounded-md font-medium transition-colors ${calendarViewMode === 'day' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}
-                >
-                  Jour
-                </button>
-                <button
-                  onClick={() => setCalendarViewMode('month')}
-                  className={`px-3 py-1 rounded-md font-medium transition-colors ${calendarViewMode === 'month' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}
-                >
-                  Mois
-                </button>
-                <button
-                  onClick={() => setCalendarViewMode('year')}
-                  className={`px-3 py-1 rounded-md font-medium transition-colors ${calendarViewMode === 'year' ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}
-                >
-                  Année
-                </button>
+                {([['day', 'Jour'], ['month', 'Mois'], ['year', 'Année']] as const).map(([mode, label]) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setCalendarViewMode(mode)}
+                    aria-pressed={calendarViewMode === mode}
+                    className={`px-3 py-1 rounded-md font-medium transition-colors ${calendarViewMode === mode ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-white'}`}
+                  >
+                    {label}
+                  </button>
+                ))}
               </div>
 
               <button
-                onClick={handleOpenNewSessionModal}
+                type="button"
+                onClick={() => handleOpenNewSessionModal()}
                 className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-brand-orange hover:bg-brand-orange-hover transition-colors flex items-center gap-1.5 shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
-                + Planifier une session
+                Planifier une formation
               </button>
             </div>
           </div>
 
-          {/* VUE MOIS INTERACTIVE */}
+          {/* VUE MOIS */}
           {calendarViewMode === 'month' && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <CalendarDays className="w-4 h-4 text-sky-400" />
-                  Novembre 2026 — Planning des Sessions
-                </h3>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => shiftMonth(-1)}
+                    aria-label="Mois précédent"
+                    className="p-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-300 hover:text-white hover:border-slate-600 transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <h3 className="min-w-[150px] text-center text-sm font-bold text-white">
+                    {MONTHS_FR[calMonth]} {calYear}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => shiftMonth(1)}
+                    aria-label="Mois suivant"
+                    className="p-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-300 hover:text-white hover:border-slate-600 transition-colors"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCurrentCalendarDate(new Date(new Date().getFullYear(), new Date().getMonth(), 1))}
+                    className="ml-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-slate-800 bg-slate-950 text-slate-300 hover:text-white hover:border-slate-600 transition-colors"
+                  >
+                    Aujourd'hui
+                  </button>
+                </div>
                 <span className="text-xs text-slate-400">
-                  {allSessions.length} sessions programmées
+                  {monthFormations.length} formation{monthFormations.length > 1 ? 's' : ''} planifiée{monthFormations.length > 1 ? 's' : ''} ce mois
                 </span>
               </div>
 
-              {/* Calendrier Grid (30 jours de Nov) */}
-              <div className="grid grid-cols-7 gap-1.5 text-center text-xs">
-                {['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].map(d => (
-                  <div key={d} className="p-2 font-bold text-slate-400 uppercase text-[10px] bg-slate-950/60 rounded-md">
+              <div className="grid grid-cols-7 gap-1.5 text-xs">
+                {WEEKDAYS_FR.map(d => (
+                  <div key={d} className="p-2 text-center font-bold text-slate-400 uppercase text-[10px] bg-slate-950/60 rounded-md">
                     {d}
                   </div>
                 ))}
-                {Array.from({ length: 30 }).map((_, i) => {
+
+                {Array.from({ length: leadingBlanks }).map((_, i) => (
+                  <div key={`blank-${i}`} className="min-h-[104px] rounded-lg border border-transparent" aria-hidden="true" />
+                ))}
+
+                {Array.from({ length: daysInMonth }).map((_, i) => {
                   const dayNum = i + 1;
-                  const dateStr = `2026-11-${dayNum < 10 ? '0' + dayNum : dayNum}`;
-                  const matchingSessions = allSessions.filter(s => s.startDate <= dateStr && s.endDate >= dateStr);
+                  const dateStr = `${monthPrefix}-${pad2(dayNum)}`;
+                  const dayFormations = formationsOn(dateStr);
+                  const isToday = dateStr === todayIso;
 
                   return (
-                    <div 
-                      key={dayNum} 
-                      className={`min-h-[85px] p-2 rounded-lg border text-left transition-colors flex flex-col justify-between ${
-                        matchingSessions.length > 0 
-                          ? 'bg-slate-900 border-sky-500/30' 
-                          : 'bg-slate-950/40 border-slate-800/80 hover:border-slate-700'
+                    <div
+                      key={dateStr}
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`Planifier une formation le ${dayNum} ${MONTHS_FR[calMonth]} ${calYear}`}
+                      title="Cliquer pour planifier une formation à cette date"
+                      onClick={() => handleOpenNewSessionModal(dateStr)}
+                      onKeyDown={(e) => {
+                        if (e.target === e.currentTarget && (e.key === 'Enter' || e.key === ' ')) {
+                          e.preventDefault();
+                          handleOpenNewSessionModal(dateStr);
+                        }
+                      }}
+                      className={`group/day focus-ring min-h-[104px] p-1.5 rounded-lg border text-left cursor-pointer transition-colors flex flex-col gap-1 ${
+                        isToday
+                          ? 'bg-slate-900 border-brand-orange/60'
+                          : 'bg-slate-950/40 border-slate-800/80 hover:border-slate-600 hover:bg-slate-900/70'
                       }`}
                     >
-                      <span className={`text-[11px] font-bold ${matchingSessions.length > 0 ? 'text-sky-400' : 'text-slate-500'}`}>
-                        {dayNum}
-                      </span>
-                      {matchingSessions.map(s => (
-                        <div 
-                          key={s.id} 
-                          className="mt-1 p-1 rounded bg-sky-500/10 border border-sky-500/20 text-[10px] text-sky-300 font-medium truncate"
-                          title={`${s.courseTitle} (${s.enrolledCount}/${s.maxAttendees})`}
+                      <div className="flex items-center justify-between px-0.5">
+                        <span
+                          className={`text-[11px] font-bold ${
+                            isToday
+                              ? 'w-5 h-5 rounded-full bg-brand-orange text-white flex items-center justify-center'
+                              : dayFormations.length > 0 ? 'text-slate-200' : 'text-slate-500'
+                          }`}
                         >
-                          {s.courseCode}
-                        </div>
-                      ))}
+                          {dayNum}
+                        </span>
+                        <Plus className="w-3.5 h-3.5 text-slate-400 opacity-0 group-hover/day:opacity-100 group-focus-visible/day:opacity-100 transition-opacity" />
+                      </div>
+
+                      {dayFormations.map(s => {
+                        const color = formationColor(s.trainingId);
+                        return (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleEditSession(s.trainingId, s); }}
+                            title={`${s.courseTitle} — ${s.enrolledCount}/${s.maxAttendees} inscrits (cliquer pour modifier)`}
+                            className="w-full px-1.5 py-1 rounded text-[10px] leading-tight font-medium text-left text-slate-100 hover:brightness-125 transition"
+                            style={{ backgroundColor: `${color}2e`, borderLeft: `3px solid ${color}` }}
+                          >
+                            <span className="line-clamp-2">{s.courseTitle}</span>
+                          </button>
+                        );
+                      })}
                     </div>
                   );
                 })}
               </div>
+
+              {/* Légende : une couleur par formation */}
+              {monthFormations.length > 0 && (
+                <ul className="flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-slate-300">
+                  {courses
+                    .filter(c => monthFormations.some(s => s.trainingId === c.id))
+                    .map(c => (
+                      <li key={c.id} className="flex items-center gap-1.5">
+                        <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ backgroundColor: formationColor(c.id) }} />
+                        {c.title}
+                      </li>
+                    ))}
+                </ul>
+              )}
             </div>
           )}
 
           {/* VUE JOUR */}
           {calendarViewMode === 'day' && (
             <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 space-y-3">
-              <h3 className="text-xs font-bold text-white uppercase tracking-wider">
-                Planning Quotidien — 15 Novembre 2026
-              </h3>
-              <div className="divide-y divide-slate-800/80 text-xs">
-                <div className="py-2.5 flex justify-between items-center">
-                  <span className="font-mono text-slate-400">09h00 - 12h30</span>
-                  <span className="text-white font-medium">Session Pratique Formulation Émulsions (Dr. Leila Zerouali)</span>
-                  <span className="text-emerald-400">10 participants</span>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCalendarDay(addDaysIso(selectedCalendarDay, -1))}
+                    aria-label="Jour précédent"
+                    className="p-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-300 hover:text-white hover:border-slate-600 transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <h3 className="min-w-[220px] text-center text-sm font-bold text-white first-letter:uppercase">
+                    {selectedDayLabel}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCalendarDay(addDaysIso(selectedCalendarDay, 1))}
+                    aria-label="Jour suivant"
+                    className="p-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-300 hover:text-white hover:border-slate-600 transition-colors"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
                 </div>
-                <div className="py-2.5 flex justify-between items-center">
-                  <span className="font-mono text-slate-400">14h00 - 17h00</span>
-                  <span className="text-white font-medium">Tests de stabilité thermique & Centrifugation</span>
-                  <span className="text-sky-400">Laboratoire 2</span>
+                <button
+                  type="button"
+                  onClick={() => handleOpenNewSessionModal(selectedCalendarDay)}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium border border-slate-700 text-slate-200 hover:text-white hover:border-slate-500 transition-colors flex items-center gap-1.5"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Planifier ce jour
+                </button>
+              </div>
+
+              {selectedDayFormations.length === 0 ? (
+                <p className="py-8 text-center text-xs text-slate-400">
+                  Aucune formation ce jour-là.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {selectedDayFormations.map(s => (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => handleEditSession(s.trainingId, s)}
+                      className="w-full p-3 rounded-lg bg-slate-900/70 border border-slate-800 hover:border-slate-600 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-left"
+                      style={{ borderLeft: `3px solid ${formationColor(s.trainingId)}` }}
+                    >
+                      <div className="min-w-0">
+                        <span className="block text-xs font-semibold text-white">{s.courseTitle}</span>
+                        <span className="block text-[11px] text-slate-400">{s.instructor} • {s.location}</span>
+                      </div>
+                      <span className="shrink-0 text-[11px] text-slate-300">
+                        Jour {Math.round((new Date(`${selectedCalendarDay}T00:00:00`).getTime() - new Date(`${s.startDate}T00:00:00`).getTime()) / 86400000) + 1} • {s.enrolledCount}/{s.maxAttendees} inscrits
+                      </span>
+                    </button>
+                  ))}
                 </div>
+              )}
+            </div>
+          )}
+
+          {/* VUE ANNÉE */}
+          {calendarViewMode === 'year' && (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setCurrentCalendarDate(new Date(calYear - 1, calMonth, 1))}
+                  aria-label="Année précédente"
+                  className="p-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-300 hover:text-white hover:border-slate-600 transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <h3 className="min-w-[70px] text-center text-sm font-bold text-white">{calYear}</h3>
+                <button
+                  type="button"
+                  onClick={() => setCurrentCalendarDate(new Date(calYear + 1, calMonth, 1))}
+                  aria-label="Année suivante"
+                  className="p-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-300 hover:text-white hover:border-slate-600 transition-colors"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 text-xs">
+                {MONTHS_FR.map((monthName, monthIndex) => {
+                  const list = formationsInMonth(calYear, monthIndex);
+                  return (
+                    <button
+                      key={monthName}
+                      type="button"
+                      onClick={() => { setCurrentCalendarDate(new Date(calYear, monthIndex, 1)); setCalendarViewMode('month'); }}
+                      className="p-3 rounded-xl bg-slate-950/50 border border-slate-800 hover:border-slate-600 hover:bg-slate-900/70 transition-colors text-left space-y-2"
+                    >
+                      <span className="font-bold text-white block">{monthName}</span>
+                      <span className="text-[11px] text-slate-400 block">
+                        {list.length === 0 ? 'Aucune formation' : `${list.length} formation${list.length > 1 ? 's' : ''}`}
+                      </span>
+                      <span className="flex gap-1 h-2">
+                        {list.slice(0, 8).map(sess => (
+                          <span key={sess.id} className="w-2 h-2 rounded-full" style={{ backgroundColor: formationColor(sess.trainingId) }} />
+                        ))}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
 
-          {/* VUE ANNEE */}
-          {calendarViewMode === 'year' && (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              {['Janv 2026', 'Févr 2026', 'Mars 2026', 'Avr 2026', 'Mai 2026', 'Juin 2026', 'Juil 2026', 'Août 2026', 'Sept 2026', 'Oct 2026', 'Nov 2026', 'Déc 2026'].map(m => (
-                <div key={m} className="p-3 rounded-xl bg-slate-950/50 border border-slate-800 text-center">
-                  <span className="font-bold text-white block mb-1">{m}</span>
-                  <span className="text-[11px] text-sky-400">2 à 4 sessions / mois</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Liste détaillée des sessions avec Options Modifier & Supprimer */}
+          {/* Liste détaillée des formations planifiées */}
           <div className="pt-4 border-t border-slate-800/80 space-y-3">
             <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-              Sessions Actives ({allSessions.length})
+              Formations planifiées ({allSessions.length})
             </h3>
 
             <div className="space-y-2">
-              {allSessions.map(sess => (
-                <div key={sess.id} className="p-3.5 rounded-xl bg-slate-950/50 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              {allSessions.length === 0 && (
+                <p className="py-6 text-center text-xs text-slate-400">
+                  Aucune formation planifiée. Cliquez sur une date du calendrier pour commencer.
+                </p>
+              )}
+              {[...allSessions].sort((x, y) => x.startDate.localeCompare(y.startDate)).map(sess => (
+                <div
+                  key={sess.id}
+                  className="p-3.5 rounded-xl bg-slate-950/50 border border-slate-800 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3"
+                  style={{ borderLeft: `3px solid ${formationColor(sess.trainingId)}` }}
+                >
                   <div>
-                    <span className="text-[10px] font-semibold text-sky-400 uppercase tracking-wider block">
+                    <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block">
                       Du {formatDate(sess.startDate)} au {formatDate(sess.endDate)}
                     </span>
                     <h4 className="text-xs font-semibold text-white mt-0.5">{sess.courseTitle}</h4>
-                    <p className="text-[11px] text-slate-400">{sess.location}</p>
+                    <p className="text-[11px] text-slate-400">{sess.instructor} • {sess.location}</p>
                   </div>
 
                   <div className="flex items-center gap-3">
@@ -1439,25 +1676,26 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
                       <span className="text-[10px] text-emerald-400 block">{Math.round((sess.enrolledCount / sess.maxAttendees) * 100)}% de capacité</span>
                     </div>
 
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-medium border ${
+                    <span className={`px-2 py-0.5 rounded text-[10px] font-medium border whitespace-nowrap ${
                       sess.status === 'Complète' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                     }`}>
                       {sess.status}
                     </span>
 
-                    {/* Actions Modifier & Supprimer la session */}
                     <div className="flex items-center gap-1">
                       <button
                         onClick={() => handleEditSession(sess.trainingId, sess)}
                         className="p-1.5 rounded-md text-slate-400 hover:text-amber-400 hover:bg-slate-800 transition-colors"
-                        title="Modifier session"
+                        title="Modifier la planification"
+                        aria-label={`Modifier la planification de ${sess.courseTitle}`}
                       >
                         <Edit2 className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={() => handleDeleteSession(sess.trainingId, sess.id)}
                         className="p-1.5 rounded-md text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition-colors"
-                        title="Supprimer session"
+                        title="Retirer du calendrier"
+                        aria-label={`Retirer ${sess.courseTitle} du calendrier`}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -2378,23 +2616,40 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
 
       {/* MODALE CRÉATION / MODIFICATION SESSION CALENDRIER */}
       {isSessionModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto animate-fade-in">
-          <div className="my-auto w-full max-w-md bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-md overflow-y-auto animate-fade-in"
+          onClick={() => setIsSessionModalOpen(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Planification d'une formation"
+        >
+          <div
+            className="my-auto w-full max-w-md bg-slate-900/90 backdrop-blur-md border border-slate-800 rounded-2xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between pb-2 border-b border-slate-800">
               <h3 className="text-sm font-bold text-white">
-                {editingSession ? 'Modifier la Session' : '+ Planifier une Session'}
+                {editingSession ? 'Modifier la formation planifiée' : 'Planifier une formation'}
               </h3>
-              <button onClick={() => setIsSessionModalOpen(false)} className="text-slate-400 hover:text-white">
+              <button onClick={() => setIsSessionModalOpen(false)} aria-label="Fermer" title="Fermer (Échap)" className="text-slate-400 hover:text-white">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <form onSubmit={handleSaveSession} className="space-y-3">
               <div>
-                <label className="text-xs text-slate-300 block mb-1">Formation Concernée</label>
+                <label className="text-xs text-slate-300 block mb-1">Formation à planifier</label>
                 <select
                   value={sessionFormData.courseId}
-                  onChange={(e) => setSessionFormData({ ...sessionFormData, courseId: e.target.value })}
+                  onChange={(e) => {
+                    // La date de fin suit la durée de la formation choisie
+                    const duration = Math.max(1, courses.find(c => c.id === e.target.value)?.durationDays || 1);
+                    setSessionFormData({
+                      ...sessionFormData,
+                      courseId: e.target.value,
+                      endDate: addDaysIso(sessionFormData.startDate, duration - 1),
+                    });
+                  }}
                   disabled={!!editingSession}
                   className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-slate-800 text-white focus:outline-none disabled:opacity-60"
                 >
@@ -2411,7 +2666,17 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
                     type="date"
                     required
                     value={sessionFormData.startDate}
-                    onChange={(e) => setSessionFormData({ ...sessionFormData, startDate: e.target.value })}
+                    onChange={(e) => {
+                      if (!e.target.value) return;
+                      setSessionFormData({
+                        ...sessionFormData,
+                        startDate: e.target.value,
+                        // À la création, la fin est recalculée ; en modification, on la décale seulement si elle devient antérieure
+                        endDate: editingSession && sessionFormData.endDate >= e.target.value
+                          ? sessionFormData.endDate
+                          : addDaysIso(e.target.value, formCourseDuration - 1),
+                      });
+                    }}
                     className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-slate-800 text-white focus:outline-none"
                   />
                 </div>
@@ -2421,14 +2686,19 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
                     type="date"
                     required
                     value={sessionFormData.endDate}
+                    min={sessionFormData.startDate}
                     onChange={(e) => setSessionFormData({ ...sessionFormData, endDate: e.target.value })}
                     className="w-full px-3 py-2 text-xs rounded-lg bg-slate-950 border border-slate-800 text-white focus:outline-none"
                   />
                 </div>
               </div>
 
+              <p className="text-[11px] text-slate-400 -mt-1">
+                Durée prévue de cette formation : {formCourseDuration} jour{formCourseDuration > 1 ? 's' : ''}. La date de fin est proposée automatiquement.
+              </p>
+
               <div>
-                <label className="text-xs text-slate-300 block mb-1">Lieu de la session</label>
+                <label className="text-xs text-slate-300 block mb-1">Lieu de la formation</label>
                 <input
                   type="text"
                   required

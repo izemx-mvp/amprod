@@ -11,6 +11,7 @@ import {
   Zap
 } from 'lucide-react';
 import { BRANDS } from '../data/brands';
+import { BRAND_VISUALS } from '../data/images';
 import { BrandId } from '../types';
 import { BrandLogo } from '../components/BrandLogo';
 import { FooterInstitutional } from '../components/FooterAndDisclaimers';
@@ -50,32 +51,32 @@ export const LoginPage: React.FC = () => {
     switch (brand.id) {
       case 'cosmetics':
         return {
-          bgImage: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&w=1600&q=80',
+          bgImage: BRAND_VISUALS[brand.id].hero,
           title: 'Matières Premières Cosmétiques & R&D Formulatoire',
           description: 'Plateforme ERP centrale pour l\'approvisionnement B2B de matières premières pures, suivi des stocks de gros, conformité technique et relation clients industriels.',
         };
       case 'rehab':
         return {
-          bgImage: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=1600&q=80',
+          bgImage: BRAND_VISUALS[brand.id].hero,
           title: 'Cosmétique Biologique, Soins Capillaires & Visage',
           description: 'Gestion intégrée de la marque cosmétique bio : formulations naturelles, shampooings solides, crèmes visage bio, traçabilité des lots et distribution.',
         };
       case 'huiles':
         return {
-          bgImage: 'https://images.unsplash.com/photo-1608248597359-52e85e054696?auto=format&fit=crop&w=1600&q=80',
+          bgImage: BRAND_VISUALS[brand.id].hero,
           title: 'Pressage à Froid & Élixirs Purs Sélectionnés',
           description: 'Système ERP spécialisé dans l\'extraction noble : Argan, Pépins de Figue de Barbarie, Jojoba et Nigelle en conditionnement gros et détail.',
         };
       case 'formations':
         return {
-          bgImage: 'https://images.unsplash.com/photo-1581093458791-9f3c3900df4b?auto=format&fit=crop&w=1600&q=80',
+          bgImage: BRAND_VISUALS[brand.id].hero,
           title: 'Académie Supérieure des Métiers de la Beauté',
           description: 'Portail pédagogique et administratif : gestion des promotions, planification de sessions interactives, paiements fractionnés et suivi Sofia IA.',
         };
       case 'seo':
       default:
         return {
-          bgImage: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1600&q=80',
+          bgImage: BRAND_VISUALS[brand.id].hero,
           title: 'Agent SEO Central & Supervision Groupe',
           description: 'Hub centralisé d\'analyse de visibilité Google, détection des anomalies de trafic best-sellers et assistant stratégique cross-marques.',
         };
@@ -121,14 +122,15 @@ export const LoginPage: React.FC = () => {
         <div className="relative lg:col-span-7 flex flex-col justify-between p-8 sm:p-12 lg:p-16 overflow-hidden">
           {/* Contextual HD Background Image */}
           <div 
-            className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-105"
+            className="absolute inset-0 bg-cover bg-center transition-transform duration-1000 scale-105 bg-slate-900"
             style={{ backgroundImage: `url(${visuals.bgImage})` }}
           />
 
           {/* Dark luxury gradient overlays */}
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/85 to-slate-950/70" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/70 to-slate-950/35" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/70 via-slate-950/20 to-transparent" />
           <div 
-            className="absolute inset-0 opacity-20 mix-blend-multiply"
+            className="absolute inset-0 opacity-25 mix-blend-multiply"
             style={{ backgroundColor: brand.primaryColor }}
           />
 
@@ -155,18 +157,18 @@ export const LoginPage: React.FC = () => {
 
           {/* Middle Content: Title and Institutional Description */}
           <div className="relative z-10 space-y-4 my-auto py-10 max-w-xl">
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-white tracking-tight leading-tight">
+            <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.1] drop-shadow-lg">
               {visuals.title}
             </h1>
-            <p className="text-sm sm:text-base text-slate-300 leading-relaxed font-normal">
+            <p className="text-sm sm:text-base text-slate-200 leading-relaxed font-normal drop-shadow">
               {visuals.description}
             </p>
           </div>
 
           {/* Bottom accreditation note on Left Column (No color name mentions) */}
-          <div className="relative z-10 pt-6 border-t border-slate-800/60 flex items-center justify-between text-xs text-slate-400">
+          <div className="relative z-10 pt-6 border-t border-white/15 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
             <span>AM PROD Holding • Division Opérationnelle</span>
-            <span className="font-medium text-slate-300">
+            <span className="font-medium text-white">
               {brand.sector}
             </span>
           </div>
@@ -175,7 +177,7 @@ export const LoginPage: React.FC = () => {
         {/* COLONNE DROITE (Formulaire de connexion Administrateur standard) */}
         <div className="lg:col-span-5 bg-slate-950 flex flex-col justify-center items-center p-6 sm:p-12 lg:p-14 border-t lg:border-t-0 lg:border-l border-slate-800/80">
           
-          <div className="w-full max-w-md space-y-6">
+          <div className="w-full max-w-md space-y-7" style={{ ['--brand-color' as any]: brand.primaryColor }}>
             
             {/* Form Header */}
             <div className="space-y-2">
@@ -192,7 +194,7 @@ export const LoginPage: React.FC = () => {
               <h2 className="text-2xl font-bold text-white tracking-tight">
                 Connexion Administrateur
               </h2>
-              <p className="text-xs text-slate-400">
+              <p className="text-sm text-slate-400 leading-relaxed">
                 Espace de gestion réservé à l'administration de <strong className="text-slate-200">{brand.name}</strong>.
               </p>
             </div>
@@ -200,33 +202,37 @@ export const LoginPage: React.FC = () => {
             {/* Standard Login Form */}
             <form onSubmit={handleLogin} className="space-y-4">
               <div>
-                <label className="text-xs font-medium text-slate-300 block mb-1.5">
+                <label htmlFor="login-email" className="text-xs font-medium text-slate-300 block mb-1.5">
                   Identifiant Administrateur
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+                  <Mail className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   <input
+                    id="login-email"
                     type="email"
+                    autoComplete="username"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full pl-9 pr-4 py-2.5 text-xs font-medium rounded-lg bg-slate-900 border border-slate-800 text-slate-200 focus:outline-none focus:border-slate-700 shadow-inner"
+                    className="input-brand w-full pl-10 pr-4 py-3 text-sm font-medium rounded-xl bg-slate-900 border border-slate-800 text-slate-100 shadow-inner"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs font-medium text-slate-300 block mb-1.5">
+                <label htmlFor="login-password" className="text-xs font-medium text-slate-300 block mb-1.5">
                   Mot de Passe
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 absolute left-3.5 top-3 text-slate-400" />
+                  <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
                   <input
+                    id="login-password"
                     type="password"
+                    autoComplete="current-password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="w-full pl-9 pr-4 py-2.5 text-xs font-medium rounded-lg bg-slate-900 border border-slate-800 text-slate-200 focus:outline-none focus:border-slate-700 shadow-inner"
+                    className="input-brand w-full pl-10 pr-4 py-3 text-sm font-medium rounded-xl bg-slate-900 border border-slate-800 text-slate-100 shadow-inner"
                   />
                 </div>
               </div>
@@ -235,7 +241,7 @@ export const LoginPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full py-3 px-4 rounded-xl text-xs font-bold text-white bg-brand-orange hover:bg-brand-orange-hover transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:shadow-orange-500/20 hover:-translate-y-0.5"
+                  className="w-full py-3.5 px-4 rounded-xl text-sm font-bold disabled:opacity-70 disabled:cursor-wait text-white bg-brand-orange hover:bg-brand-orange-hover transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:shadow-orange-500/20 hover:-translate-y-0.5"
                 >
                   {isLoading ? (
                     <span className="flex items-center gap-2">
@@ -267,7 +273,7 @@ export const LoginPage: React.FC = () => {
                         key={otherId}
                         type="button"
                         onClick={() => navigate(`/login/${otherId}`)}
-                        className="text-[11px] font-medium px-2.5 py-1.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-700 text-slate-300 hover:text-white transition-all flex items-center gap-1.5"
+                        className="text-xs font-medium px-3 py-2 rounded-lg bg-slate-900 border border-slate-800 hover:border-slate-600 hover:bg-slate-800/70 text-slate-300 hover:text-white transition-all flex items-center gap-2"
                       >
                         <span 
                           className="w-2 h-2 rounded-full"

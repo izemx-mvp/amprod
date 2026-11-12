@@ -43,3 +43,122 @@ tr.hover-row {
 tr.hover-row:hover {
   background-color: rgba(30, 41, 59, 0.65) !important;
 }
+
+/* ===== Améliorations UI/UX globales ===== */
+
+/* Focus clavier visible et cohérent */
+.focus-ring:focus-visible,
+a:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--brand-color, #F97316);
+  outline-offset: 2px;
+}
+
+/* Cartes du portail : la bordure prend la couleur de la filiale au survol */
+.portal-card:hover {
+  border-color: var(--brand-color, rgba(148, 163, 184, 0.4));
+}
+
+/* Champs de formulaire : halo à la couleur de la marque */
+.input-brand {
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.input-brand:hover {
+  border-color: rgb(51, 65, 85);
+}
+.input-brand:focus {
+  outline: none;
+  border-color: var(--brand-color, #F97316);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-color, #F97316) 22%, transparent);
+}
+
+/* Apparition douce des photos une fois chargées */
+.img-fade {
+  opacity: 0;
+  transition: opacity 0.5s ease, transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.img-fade.is-loaded {
+  opacity: 1;
+}
+
+/* Respect des préférences d'accessibilité */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .img-fade {
+    opacity: 1;
+  }
+}
+
+/* ===== Harmonisation interne de l'ERP ===== */
+
+/* Tout élément cliquable affiche le curseur main et un léger retour à l'appui */
+button:not(:disabled),
+[role='button'],
+select,
+summary {
+  cursor: pointer;
+}
+button:not(:disabled):active {
+  transform: scale(0.98);
+}
+button:disabled {
+  cursor: not-allowed;
+}
+
+/* Champs de saisie : même halo de focus partout, à la couleur de la filiale */
+input:not([type='checkbox']):not([type='radio']):not([type='range']):focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+  border-color: var(--brand-color, #F97316);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand-color, #F97316) 20%, transparent);
+}
+
+/* Les badges de statut dans les tableaux ne se coupent plus sur deux lignes */
+td span[class*='rounded'][class*='border'] {
+  white-space: nowrap;
+}
+
+/* En-têtes de tableaux plus lisibles */
+thead th {
+  white-space: nowrap;
+}
+
+/* Lignes de tableau : survol homogène */
+tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+/* Ouverture douce des modales et panneaux (classes déjà utilisées dans les composants) */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes drawerEnter {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+.animate-fade-in,
+.animate-in {
+  animation: fadeIn 0.2s ease-out;
+}
+.drawer-enter {
+  animation: drawerEnter 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}

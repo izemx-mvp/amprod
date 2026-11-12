@@ -20,7 +20,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     reviewsCount: 38,
     description: 'Solution aqueuse d\'acide glycolique purifiée à 70% pour exfoliation chimique, peelings dermatologiques et ajustement de pH en formulation industrielle. Conforme pharmacopée européenne.',
     composition: 'Acide Glycolique pur 70%, Eau déminéralisée déionisée 30%. Pureté > 99.7%, métaux lourds < 5 ppm.',
-    image: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1617155093730-a8bf47be792d?w=800&auto=format&fit=crop&q=80',
     status: 'En stock'
   },
   {
@@ -39,7 +39,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     reviewsCount: 52,
     description: 'Éthanol surfin dénaturé conformément à la réglementation cosmétique européenne (bitrex). Idéal pour parfumerie, lotions hydroalcooliques et désinfection d\'équipements.',
     composition: 'Éthanol 96% vol., Dénaturant Bitrex (Benzoate de dénatonium), Alcool isopropylique 1%.',
-    image: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1595500381966-eee2034aae48?w=800&auto=format&fit=crop&q=80',
     status: 'En stock'
   },
   {
@@ -58,7 +58,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     reviewsCount: 76,
     description: 'Beurre végétal 100% pur et brut issu de collecte éco-responsable. Riche en insaponifiables (8-11%) et acides gras stéarique et oléique pour émulsions riches et baumes.',
     composition: '100% Butyrospermum Parkii Butter pur, non blanchi, sans additif chimique ni solvant.',
-    image: 'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1762840192336-575fba31d28c?w=800&auto=format&fit=crop&q=80',
     status: 'En stock'
   },
   {
@@ -77,7 +77,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     reviewsCount: 64,
     description: 'Glycérol végétal dérivé d\'huiles de colza et tournesol sans OGM. Humectant de référence pour crèmes, shampooings, émulsions et gels.',
     composition: 'Glycérine végétale USP/Ph. Eur. 99.5% pureté minimale, sans résidu d\'huile de palme.',
-    image: 'https://images.unsplash.com/photo-1608248597359-009c958469d4?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1560521166-117ca72366bd?w=800&auto=format&fit=crop&q=80',
     status: 'En stock'
   },
   {
@@ -96,7 +96,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     reviewsCount: 29,
     description: 'Tensioactif anionique sans sulfate dérivé de l\'huile de coco. Mousse crémeuse abondante et excellente tolérance cutanée pour shampooings solides et gels moussants.',
     composition: 'Sodium Cocoyl Isethionate (SCI) actif > 85%, acide stéarique libre < 10%. Sans sulfate.',
-    image: 'https://images.unsplash.com/photo-1563178406-4cdc2923acbc?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1593095948071-474c5cc2989d?w=800&auto=format&fit=crop&q=80',
     status: 'Stock faible'
   },
 
@@ -119,7 +119,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     reviewsCount: 184,
     description: 'Soin lavant solide certifié 100% bio. Équilibre le cuir chevelu, freine la chute et stimule la pousse sans alourdir la fibre. Zéro plastique et biodégradable.',
     composition: 'SCI végétal doux, Poudre d\'ortie piquante bio, Hydrolat de romarin sauvage, Beurre de karité bio, Huile de ricin pressée à froid.',
-    image: 'https://images.unsplash.com/photo-1607006314180-a22675681e84?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1584305574647-0cc949a2bb9f?w=800&auto=format&fit=crop&q=80',
     status: 'En stock'
   },
   {
@@ -138,7 +138,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     reviewsCount: 92,
     description: 'Soin anti-âge lissant aux extraits botaniques d\'immortelle des sables et gel d\'aloé vera frais. Régénère le film hydrolipidique et illumine le teint.',
     composition: 'Gel d\'aloé vera bio 65%, Huile essentielle d\'immortelle bio, Huile de jojoba bio, Acide hyaluronique végétal, Cire florale.',
-    image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1629732047847-50219e9c5aef?w=800&auto=format&fit=crop&q=80',
     status: 'En stock'
   },
   {
@@ -157,7 +157,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     reviewsCount: 78,
     description: 'Baume riche réparateur pour peaux sèches et sensibles. Apaise immédiatement les tiraillements et restaure l\'élasticité cutanée.',
     composition: 'Macérât huileux de calendula bio, Cire d\'opercule pure, Beurre de mangue sauvage, Huile d\'amande douce bio, Vitamine E naturelle.',
-    image: 'https://images.unsplash.com/photo-1598440947619-2c35fc9aa908?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1573812461383-e5f8b759d12e?w=800&auto=format&fit=crop&q=80',
     status: 'En stock'
   },
   {
@@ -176,7 +176,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     reviewsCount: 65,
     description: 'Traitement intensif pour cheveux abîmés, secs ou décolorés. Répare la cuticule en profondeur, gaine les longueurs et prévient les pointes fourchues.',
     composition: 'Huile de ricin bio pressée à froid, Protéines de blé hydrolysées (phytokératine), Beurre de karité bio, Extrait de guimauve.',
-    image: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1638131164217-c240e7627611?w=800&auto=format&fit=crop&q=80',
     status: 'En stock'
   },
 
@@ -199,7 +199,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     reviewsCount: 389,
     description: 'Pressée mécaniquement à froid sans solvant. Certifiée IGP Maroc & Ecocert Cosmos Organic. Teneur exceptionnelle en vitamine E (620 mg/kg) et oméga-6.',
     composition: '100% Argania Spinosa Kernel Oil, Première pression à froid, non torréfiée.',
-    image: 'https://images.unsplash.com/photo-1608248597359-009c958469d4?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1768689033119-c3ac1e437d20?w=800&auto=format&fit=crop&q=80',
     status: 'En stock'
   },
   {
@@ -218,7 +218,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     reviewsCount: 178,
     description: 'Le joyau absolu de la cosmétique anti-âge. Nécessite 1 tonne de fruits pour extraire seulement 1 litre d\'huile pure. Teneur record en stérols et acides gras essentiels.',
     composition: '100% Opuntia Ficus-Indica Seed Oil pure, non raffinée, pressée sur meule de granit.',
-    image: 'https://images.unsplash.com/photo-1617897903246-719242758050?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1717016296561-37af0c705281?w=800&auto=format&fit=crop&q=80',
     status: 'En stock'
   },
   {
@@ -237,7 +237,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     reviewsCount: 122,
     description: 'Riche en thymoquinone active (>2.8%). Propriétés purifiantes, antibactériennes et apaisantes pour le cuir chevelu et les peaux à imperfections.',
     composition: '100% Nigella Sativa Seed Oil pressée à froid de graines pures non chauffées.',
-    image: 'https://images.unsplash.com/photo-1601049541289-9b1b7bbbfe19?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1735011725730-3c91d903ac92?w=800&auto=format&fit=crop&q=80',
     status: 'En stock'
   },
   {
@@ -256,7 +256,7 @@ export const INITIAL_PRODUCTS: Product[] = [
     reviewsCount: 88,
     description: 'Cire liquide sébo-régulatrice végétale non comédogène. Pénètre sans effet gras et protège la barrière cutanée.',
     composition: '100% Simmondsia Chinensis Seed Oil pure, première pression à froid.',
-    image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1605040056130-38d9faad3534?w=800&auto=format&fit=crop&q=80',
     status: 'En stock'
   }
 ];

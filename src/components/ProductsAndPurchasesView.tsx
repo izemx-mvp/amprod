@@ -25,6 +25,7 @@ import {
   PurchaseOrder 
 } from '../types';
 import { formatCurrency, formatDate } from '../utils/cn';
+import { brandFallbackImage } from '../data/images';
 
 interface ProductsAndPurchasesViewProps {
   viewMode: 'products' | 'achats' | 'fournisseurs';
@@ -72,7 +73,7 @@ export const ProductsAndPurchasesView: React.FC<ProductsAndPurchasesViewProps> =
     cost: 250,
     stock: 100,
     minStock: 20,
-    image: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&auto=format&fit=crop&q=80',
+    image: brandFallbackImage(brand.id),
     description: '',
     composition: '',
   });
@@ -137,11 +138,7 @@ export const ProductsAndPurchasesView: React.FC<ProductsAndPurchasesViewProps> =
       cost: 100,
       stock: 80,
       minStock: 20,
-      image: brand.id === 'cosmetics' 
-        ? 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&auto=format&fit=crop&q=80'
-        : brand.id === 'rehab'
-        ? 'https://images.unsplash.com/photo-1607006314180-a22675681e84?w=800&auto=format&fit=crop&q=80'
-        : 'https://images.unsplash.com/photo-1608248597359-009c958469d4?w=800&auto=format&fit=crop&q=80',
+      image: brandFallbackImage(brand.id),
       description: '',
       composition: '',
     });
@@ -224,7 +221,7 @@ export const ProductsAndPurchasesView: React.FC<ProductsAndPurchasesViewProps> =
         reviewsCount: 1,
         description: productForm.description,
         composition: productForm.composition,
-        image: productForm.image || 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&auto=format&fit=crop&q=80',
+        image: productForm.image || brandFallbackImage(brand.id),
         status: statusVal as any,
       };
       const updated = [newProd, ...products];
@@ -342,10 +339,11 @@ export const ProductsAndPurchasesView: React.FC<ProductsAndPurchasesViewProps> =
             {/* Filter and Add Bar */}
             <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
               {/* Search */}
-              <div className="relative flex-1 sm:w-60">
+              <div className="relative flex-1 min-w-[13rem] sm:flex-none sm:w-60">
                 <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400" />
                 <input
                   type="text"
+                  aria-label="Rechercher un produit"
                   placeholder="Rechercher produit, SKU..."
                   value={searchTerm}
                   onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
@@ -384,7 +382,7 @@ export const ProductsAndPurchasesView: React.FC<ProductsAndPurchasesViewProps> =
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-brand-orange hover:bg-brand-orange-hover transition-colors flex items-center gap-1.5 shadow-sm shrink-0"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>+ Nouveau produit</span>
+                <span>Nouveau produit</span>
               </button>
             </div>
           </div>
@@ -407,9 +405,10 @@ export const ProductsAndPurchasesView: React.FC<ProductsAndPurchasesViewProps> =
                         src={p.image} 
                         alt={p.name} 
                         onError={(e) => {
-                          e.currentTarget.src = 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&auto=format&fit=crop&q=80';
+                          e.currentTarget.src = brandFallbackImage(brand.id);
                         }}
-                        className="object-cover w-full h-48 rounded-lg group-hover:scale-105 transition-transform duration-500"
+                        loading="lazy"
+                        className="object-cover w-full h-48 group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute top-2.5 left-2.5">
                         <span className="text-[10px] px-2 py-0.5 rounded font-medium bg-slate-950/80 text-slate-300 border border-slate-800 backdrop-blur-sm">
@@ -629,7 +628,7 @@ export const ProductsAndPurchasesView: React.FC<ProductsAndPurchasesViewProps> =
                 className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-brand-orange hover:bg-brand-orange-hover transition-colors flex items-center gap-1.5 shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>+ Nouveau fournisseur</span>
+                <span>Nouveau fournisseur</span>
               </button>
             </div>
           </div>

@@ -51,6 +51,8 @@ import {
   CartesianGrid, 
   Legend 
 } from 'recharts';
+import { Cell, LabelList } from 'recharts';
+import { BRAND_CHART_COLORS, ChartLegend, ChartTooltip, SERIES, activeDot, barCursor, formatCompact, gridProps, lineCursor, seriesDot, xAxisProps, yAxisProps } from '../components/ChartKit';
 import { SeoMetric } from '../types';
 import { BRANDS } from '../data/brands';
 import { AIDisclaimer } from '../components/FooterAndDisclaimers';
@@ -301,7 +303,7 @@ const TOP_PRODUCTS_MONTH: TopProductItem[] = [
     badgeLabel: 'N°1 Ventes Laboratoire',
     productName: 'Sérum Éclat Niacinamide 10% + Zinc PCA 30ml',
     category: 'Sérums Haute Efficacité & R&D',
-    image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1786171118415-07653ed8cf99?w=800&auto=format&fit=crop&q=80',
     monthlyVolume: '1 420 unités vendues',
     monthlyRevenue: 397600,
     topKeyword: 'sérum niacinamide éclat maroc',
@@ -316,7 +318,7 @@ const TOP_PRODUCTS_MONTH: TopProductItem[] = [
     badgeLabel: 'Bestseller Cosmétique Bio',
     productName: 'Shampooing Purifiant Romarin & Ortie Bio 250ml',
     category: 'Soins Capillaires Biologiques',
-    image: 'https://images.unsplash.com/photo-1535585209827-a15fcdbc4c2d?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1638130981545-39e109d88315?w=800&auto=format&fit=crop&q=80',
     monthlyVolume: '2 150 unités vendues',
     monthlyRevenue: 279500,
     topKeyword: 'shampooing bio sans sulfate maroc',
@@ -331,7 +333,7 @@ const TOP_PRODUCTS_MONTH: TopProductItem[] = [
     badgeLabel: 'Top Export Vrac & Fûts',
     productName: 'Huile Vierge Extra Pépins de Figue de Barbarie Bio 1L',
     category: 'Matières Premières & Export B2B',
-    image: 'https://images.unsplash.com/photo-1608248597359-55365e64817a?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1563422156298-c778a278f9a5?w=800&auto=format&fit=crop&q=80',
     monthlyVolume: '84 fûts & flacons pro',
     monthlyRevenue: 672000,
     topKeyword: 'pure argan & barbary oil supplier',
@@ -346,7 +348,7 @@ const TOP_PRODUCTS_MONTH: TopProductItem[] = [
     badgeLabel: 'Cursus Phare Académie',
     productName: 'Masterclass Formulation Émulsions, Sérums & Soins',
     category: 'Certifications BPF & Laboratoire',
-    image: 'https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=800&auto=format&fit=crop&q=80',
+    image: 'https://images.unsplash.com/photo-1658387576718-5053dfd0cb53?w=800&auto=format&fit=crop&q=80',
     monthlyVolume: '57 apprenants certifiés',
     monthlyRevenue: 485000,
     topKeyword: 'formation formulation cosmetique casablanca',
@@ -900,33 +902,34 @@ export const SeoAgentPage: React.FC<SeoAgentPageProps> = ({ onNavigateToBrand })
                   data={managedBrands.map(b => ({
                     name: b.name.replace('AM PROD ', ''),
                     trafic: b.organicTrafficMonthly,
-                    score: b.seoScore
+                    color: BRAND_CHART_COLORS[b.brandId] || SERIES.violet
                   }))}
-                  margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                  margin={{ top: 24, right: 12, left: 0, bottom: 0 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                  <XAxis dataKey="name" stroke="#64748b" tick={{ fontSize: 11 }} />
-                  <YAxis 
-                    stroke="#64748b" 
-                    tick={{ fontSize: 10 }}
-                    tickFormatter={(v) => `${(v / 1000).toFixed(0)}k`}
+                  <CartesianGrid {...gridProps} />
+                  <XAxis dataKey="name" {...xAxisProps} />
+                  <YAxis {...yAxisProps} tickFormatter={formatCompact} />
+                  <Tooltip
+                    cursor={barCursor}
+                    content={
+                      <ChartTooltip
+                        formatValue={(val) => `${val.toLocaleString('fr-FR')} visites`}
+                        seriesLabel={() => 'Trafic organique'}
+                      />
+                    }
                   />
-                  <Tooltip 
-                    cursor={{ fill: 'rgba(99, 102, 241, 0.08)' }}
-                    formatter={(value: any) => [`${Number(value).toLocaleString()} visites`, 'Trafic Organique']}
-                    contentStyle={{ 
-                      backgroundColor: '#0f172a', 
-                      borderColor: '#334155', 
-                      borderRadius: '0.5rem', 
-                      fontSize: '12px', 
-                      color: '#ffffff',
-                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)',
-                      padding: '8px 12px'
-                    }}
-                    itemStyle={{ color: '#818cf8', fontWeight: 600 }}
-                    labelStyle={{ color: '#cbd5e1', fontWeight: 700, marginBottom: '4px' }}
-                  />
-                  <Bar dataKey="trafic" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="trafic" radius={[4, 4, 0, 0]} maxBarSize={28}>
+                    {managedBrands.map((b) => (
+                      <Cell key={b.id} fill={BRAND_CHART_COLORS[b.brandId] || SERIES.violet} />
+                    ))}
+                    <LabelList
+                      dataKey="trafic"
+                      position="top"
+                      offset={8}
+                      formatter={(val: number) => formatCompact(val)}
+                      style={{ fill: '#cbd5e1', fontSize: 11, fontWeight: 600 }}
+                    />
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -1384,32 +1387,46 @@ export const SeoAgentPage: React.FC<SeoAgentPageProps> = ({ onNavigateToBrand })
               </span>
             </div>
 
+            <ChartLegend
+              items={[
+                { label: 'AM PROD Cosmétiques', color: BRAND_CHART_COLORS.cosmetics },
+                { label: 'Rehab Bio', color: BRAND_CHART_COLORS.rehab },
+                { label: 'Huiles Végétales', color: BRAND_CHART_COLORS.huiles },
+                { label: 'AM PROD Formations', color: BRAND_CHART_COLORS.formations },
+              ]}
+            />
+
             <div className="h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={SEO_SCORE_HISTORY}
-                  margin={{ top: 15, right: 15, left: -15, bottom: 0 }}
+                  margin={{ top: 12, right: 16, left: -8, bottom: 0 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                  <XAxis dataKey="month" stroke="#64748b" tick={{ fontSize: 11 }} />
-                  <YAxis domain={[70, 100]} stroke="#64748b" tick={{ fontSize: 10 }} />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#0f172a', 
-                      borderColor: '#334155', 
-                      borderRadius: '0.5rem', 
-                      fontSize: '12px', 
-                      color: '#ffffff',
-                      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5)',
-                      padding: '8px 12px'
-                    }}
-                    labelStyle={{ color: '#cbd5e1', fontWeight: 700, marginBottom: '4px' }}
+                  <CartesianGrid {...gridProps} />
+                  <XAxis dataKey="month" {...xAxisProps} padding={{ left: 16, right: 16 }} />
+                  <YAxis domain={[70, 100]} ticks={[70, 80, 90, 100]} {...yAxisProps} />
+                  <Tooltip
+                    cursor={lineCursor}
+                    content={<ChartTooltip formatValue={(val) => `${val} / 100`} />}
                   />
-                  <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
-                  <Line type="monotone" dataKey="cosmetics" name="AM PROD Cosmétiques" stroke="#10b981" strokeWidth={2.5} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="rehab" name="Rehab Bio" stroke="#84cc16" strokeWidth={2.5} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="huiles" name="Huiles Végétales" stroke="#16a34a" strokeWidth={2.5} dot={{ r: 3 }} />
-                  <Line type="monotone" dataKey="formations" name="AM PROD Formations" stroke="#0284c7" strokeWidth={2.5} dot={{ r: 3 }} />
+                  {[
+                    { key: 'cosmetics', name: 'AM PROD Cosmétiques' },
+                    { key: 'rehab', name: 'Rehab Bio' },
+                    { key: 'huiles', name: 'Huiles Végétales' },
+                    { key: 'formations', name: 'AM PROD Formations' },
+                  ].map((serie) => (
+                    <Line
+                      key={serie.key}
+                      type="monotone"
+                      dataKey={serie.key}
+                      name={serie.name}
+                      stroke={BRAND_CHART_COLORS[serie.key]}
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                      dot={seriesDot(BRAND_CHART_COLORS[serie.key])}
+                      activeDot={activeDot(BRAND_CHART_COLORS[serie.key])}
+                    />
+                  ))}
                 </LineChart>
               </ResponsiveContainer>
             </div>
