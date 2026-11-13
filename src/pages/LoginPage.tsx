@@ -77,8 +77,8 @@ export const LoginPage: React.FC = () => {
       default:
         return {
           bgImage: BRAND_VISUALS[brand.id].hero,
-          title: 'Agent SEO Central & Supervision Groupe',
-          description: 'Hub centralisé d\'analyse de visibilité Google, détection des anomalies de trafic best-sellers et assistant stratégique cross-marques.',
+          title: 'Agent CEO & Cockpit de Direction',
+          description: 'Vue consolidée du groupe : chiffre d\'affaires par marque, marque la plus performante, meilleures ventes, encaissements et assistant de direction.',
         };
     }
   };

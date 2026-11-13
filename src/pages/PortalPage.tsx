@@ -38,7 +38,7 @@ export const PortalPage: React.FC = () => {
               AM PROD GROUP
             </h1>
             <p className="text-[11px] text-slate-400 font-normal">
-              Portail Multi-Marques ERP & Agent SEO
+              Portail Multi-Marques ERP & Agent CEO
             </p>
           </div>
         </div>
@@ -73,7 +73,7 @@ export const PortalPage: React.FC = () => {
           </h2>
 
           <p className="text-sm sm:text-base text-slate-400 leading-relaxed max-w-2xl mx-auto">
-            Sélectionnez votre espace opérationnel. Chaque filiale dispose de son catalogue dédié, de ses données synchronisées, de ses indicateurs de performance et de l'Agent SEO central.
+            Sélectionnez votre espace opérationnel. Chaque filiale dispose de son catalogue dédié, de ses données synchronisées, de ses indicateurs de performance, et la direction d'un cockpit comparant les 4 marques.
           </p>
         </motion.div>
 
@@ -200,7 +200,7 @@ export const PortalPage: React.FC = () => {
                   {hub.description}
                 </p>
                 <span className="mt-3 text-xs text-slate-400 flex items-center gap-1.5">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Vue consolidée des 4 filiales • Démo 1-Click
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Comparatif des 4 marques • Démo 1-Click
                 </span>
               </div>
 

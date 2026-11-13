@@ -576,6 +576,20 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
   // All planned sessions flattened
   const allSessions = courses.flatMap(c => c.sessions.map(s => ({ ...s, courseTitle: c.title, courseCode: c.code, instructor: c.instructor })));
 
+  // ---------- Chiffre d'affaires par formation : prix × inscrits (même calcul que le cockpit CEO) ----------
+  const courseRevenue = courses
+    .map(c => {
+      const words = c.title.replace(/[,&]/g, ' ').split(/\s+/).filter(Boolean);
+      return {
+        name: words[0] === 'Masterclass' && words[1] ? words[1] : words[0] || c.code,
+        ca: c.priceTotal * c.totalEnrolled,
+      };
+    })
+    .sort((a, b) => b.ca - a.ca);
+  const totalCourseRevenue = courseRevenue.reduce((acc, c) => acc + c.ca, 0);
+  const totalLearners = courses.reduce((acc, c) => acc + c.totalEnrolled, 0);
+  const revenuePerLearner = totalLearners > 0 ? Math.round(totalCourseRevenue / totalLearners) : 0;
+
   // ---------- Calendrier des formations : données du mois affiché ----------
   const calYear = currentCalendarDate.getFullYear();
   const calMonth = currentCalendarDate.getMonth();
@@ -802,7 +816,7 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
                 <span>Revenu Moyen / Apprenant</span>
                 <span className="px-1.5 py-0.5 rounded text-[10px] bg-orange-500/10 text-orange-400 border border-orange-500/20 font-semibold">+14.3%</span>
               </div>
-              <p className="text-2xl font-bold text-white tracking-tight">8 420 MAD</p>
+              <p className="text-2xl font-bold text-white tracking-tight">{formatCurrency(revenuePerLearner)}</p>
               <div className="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden">
                 <div className="bg-brand-orange h-full rounded-full" style={{ width: '78%' }} />
               </div>
@@ -927,32 +941,27 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
                 <div>
                   <h3 className="text-sm font-semibold text-white flex items-center gap-2">
                     <DollarSign className="w-4 h-4 text-brand-orange" />
-                    Chiffre d'Affaires par Cursus (MAD)
+                    Chiffre d'Affaires par Formation (MAD)
                   </h3>
                   <p className="text-[11px] text-slate-400 mt-0.5">
-                    Ventilation des ventes de sessions par thématique
+                    Prix × inscrits de chaque formation du catalogue
                   </p>
                 </div>
                 <span className="text-[10px] px-2 py-0.5 rounded bg-orange-500/10 text-orange-400 border border-orange-500/20 font-mono">
-                  1 263 000 MAD
+                  {formatCurrency(totalCourseRevenue)}
                 </span>
               </div>
 
               <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
-                    data={[
-                      { name: 'Émulsions', ca: 485000 },
-                      { name: 'Savonnerie', ca: 312000 },
-                      { name: 'DIP & ISO', ca: 248000 },
-                      { name: 'Distillation', ca: 142000 },
-                      { name: 'Marketing', ca: 76000 },
-                    ]}
-                    margin={{ top: 24, right: 12, left: 0, bottom: 0 }}
+                    layout="vertical"
+                    data={courseRevenue}
+                    margin={{ top: 4, right: 48, left: 0, bottom: 0 }}
                   >
-                    <CartesianGrid {...gridProps} />
-                    <XAxis dataKey="name" {...xAxisProps} />
-                    <YAxis {...yAxisProps} tickFormatter={formatCompact} />
+                    <CartesianGrid {...gridProps} horizontal={false} vertical />
+                    <XAxis type="number" {...xAxisProps} tickFormatter={formatCompact} />
+                    <YAxis type="category" dataKey="name" {...yAxisProps} width={112} />
                     <Tooltip
                       cursor={barCursor}
                       content={
@@ -962,10 +971,10 @@ export const FormationsErpModule: React.FC<FormationsErpModuleProps> = ({
                         />
                       }
                     />
-                    <Bar dataKey="ca" fill={SERIES.orange} radius={[4, 4, 0, 0]} maxBarSize={28}>
+                    <Bar dataKey="ca" fill={SERIES.orange} radius={[0, 4, 4, 0]} maxBarSize={18}>
                       <LabelList
                         dataKey="ca"
-                        position="top"
+                        position="right"
                         offset={8}
                         formatter={(val: number) => formatCompact(val)}
                         style={{ fill: '#cbd5e1', fontSize: 11, fontWeight: 600 }}

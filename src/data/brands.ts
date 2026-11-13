@@ -77,7 +77,7 @@ export const BRANDS: Record<BrandId, BrandConfig> = {
     id: 'seo',
     name: 'Agent CEO & Hub Stratégique',
     tagline: 'Direction Générale, Pilotage Global & Intelligence Multi-Marques',
-    sector: 'Supervision Stratégique, Monitoring & Synthèse IA Groupe',
+    sector: 'Supervision Stratégique & Comparatif des 4 Marques',
     badge: 'Hub CEO Stratégique',
     logo: '⚡',
     loginEmail: 'admin.ceo@amprod-group.com',
@@ -89,6 +89,6 @@ export const BRANDS: Record<BrandId, BrandConfig> = {
     accentBadge: 'bg-indigo-100 text-indigo-800 border-indigo-300 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800',
     headerGradient: 'from-indigo-950 via-slate-900 to-purple-950',
     themeGreenName: 'Supervision & Intelligence IA',
-    description: 'Centre de pilotage omnicanal de la Direction Générale : indicateurs de performance, santé web, alertes best-sellers et cockpit exécutif multi-marques.',
+    description: 'Cockpit de la Direction Générale : chiffre d\'affaires de chaque marque, marque la plus performante, meilleures ventes des 4 marques et assistant de direction.',
   }
 };

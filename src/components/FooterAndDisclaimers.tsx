@@ -43,7 +43,7 @@ export const FooterInstitutional: React.FC = () => {
           Ce MVP a été conçu et développé par IZEMX
         </span>
         <span className="text-[11px] text-slate-400">
-          AM PROD Group Holding © 2026 • Plateforme Multi-Marques ERP & Agent SEO
+          AM PROD Group Holding © 2026 • Plateforme Multi-Marques ERP & Agent CEO
         </span>
       </div>
     </footer>

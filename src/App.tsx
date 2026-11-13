@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { PortalPage } from './pages/PortalPage';
 import { LoginPage } from './pages/LoginPage';
 import { ErpLayout } from './pages/ErpLayout';
-import { SeoAgentPage } from './pages/SeoAgentPage';
+import { CeoHubPage } from './pages/CeoHubPage';
 import { FooterInstitutional } from './components/FooterAndDisclaimers';
 import { useTheme } from './hooks/useTheme';
 import { Sun, Moon, ArrowLeft, Bot, Search } from 'lucide-react';
@@ -34,7 +34,7 @@ const SeoAgentWrapper: React.FC = () => {
       {/* Main Full Width Space with Sidebar Layout */}
       <main className="relative flex-1 w-full flex flex-col">
         <AnimatedBackground variant="seo" opacity={0.3} fixed={false} />
-        <SeoAgentPage onNavigateToBrand={(bId) => navigate(`/erp/${bId}/dashboard`)} />
+        <CeoHubPage onNavigateToBrand={(bId) => navigate(`/erp/${bId}/dashboard`)} />
       </main>
 
       <FooterInstitutional />
